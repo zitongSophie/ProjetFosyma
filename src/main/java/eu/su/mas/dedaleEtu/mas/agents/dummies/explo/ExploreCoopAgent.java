@@ -153,7 +153,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		}
 		for ( int i=0; i<agentsDescriptionCatalog.length ; i++){
 			AID agentID = agentsDescriptionCatalog[i ]. getName();
-		agentsNames.add(agentID.getLocalName());
+			agentsNames.add(agentID.getLocalName());
 		}
 		return agentsNames;
 	}
@@ -164,7 +164,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		List <String> agentsNames= new ArrayList<String>();
 		DFAgentDescription dfd = new DFAgentDescription();
 		ServiceDescription sd = new ServiceDescription () ;
-		sd .setType( type); // name of the service
+		sd .setType(type); // name of the service
 		dfd . addServices(sd) ;
 		DFAgentDescription[] result;
 		try {
@@ -207,11 +207,13 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 	    if ( h1.size() != h2.size() ) {
 	        return false;
 	    }
-	    List<String> clone = new ArrayList<String>(h2); //just use h2 if you don't need to save the original h2
+	    List<String> clone = new ArrayList<String>(h2); 
+
 	    Iterator<String> it = h1.iterator();
+	    System.out.println("iterateur "+it);
 	    while (it.hasNext() ){
 	        String A = it.next();
-	        if (clone.contains(A)){ //replace clone with h2 if not concerned with saving data from h2
+	        if (clone.contains(A)){ 
 	            clone.remove(A);
 	        } else {
 	            return false;
