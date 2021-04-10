@@ -51,7 +51,7 @@ public class ReceivePPGolemBehaviour extends SimpleBehaviour {
 
 			String nextNode=null;
 			for (String myPosition : this.myAgentInfo.keySet()) {
-				nextNode=this.myMap.getNextNode(myPosition,this.myAgentInfo);
+				//nextNode=this.myMap.getNextNode(myPosition,this.myAgentInfo,this.myAgentToAsk);
 			}
 			msgReceived=this.myAgent.receive(msgTemplate);
 		}

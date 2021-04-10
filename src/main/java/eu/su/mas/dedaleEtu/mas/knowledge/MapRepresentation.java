@@ -238,7 +238,10 @@ public class MapRepresentation implements Serializable {
 			posAgent.add(agents_pos.get(ag));
 		}
 		List<String> mypath=this.getShortestPathToClosestOpenNode(myPosition,null);
-		int s1=mypath.size();
+		int s1=100;
+		if(mypath!=null)
+			s1=mypath.size();
+		
 		int s2;
 		List<String> nodes = new ArrayList<String>();//open nodes will be explored by other agents
 //		System.out.println("mypath"+mypath+"size"+mypath.size());
