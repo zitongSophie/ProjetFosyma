@@ -31,15 +31,6 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 
-//attribute agents_pos add ligne 69,78,82
-//ligne 90 ajouter les behaviours sharemap(tickbehaviour),receivemap(simplebehaviour),receivedeclare(position,simplebehaviour)
-
-//ligne 186 nextNode=this.myMap.getNextNode(myPosition,agents_pos,lobs);//getShortestPath(myPosition,this.openNodes.get(0)).get(0);
-
-
-//CHANGEMENT A PARTIR DE ligne180
-
-
 
 /**
  * <pre>
@@ -167,7 +158,6 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 					}
 					c=new Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>(this.myInfo.get(s).getLeft(), updateSG);
 					this.myInfo.put(s, c);
-					//System.out.println("apres moi "+this.myInfo.get(s).getRight().getNode(myPosition));
 				}
 				
 			}
@@ -183,11 +173,6 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 				//4.1 If there exist one open node directly reachable, go for it,
 				//	 otherwise choose one from the openNode list, compute the shortestPath and go for it
 				if (nextNode==null){
-					//no directly accessible openNode
-					//chose one, compute the path and take the first step.
-//					System.out.println(this.myAgent.getLocalName()+" begin\t myposition "+myPosition+"\t agents_pos "+agents_pos);
-/**###changement##	
- * #**/
 					
 					//changer ce ligne
 					nextNode=this.myMap.getNextNode(myPosition,this.agents_pos,this.myAgentToShareMap,lobs);//getShortestPath(myPosition,this.openNodes.get(0)).get(0);
@@ -200,17 +185,6 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 				}
 
 
-				//5) At each time step, the agent check if he received a graph from a teammate. 	
-				// If it was written properly, this sharing action should be in a dedicated behaviour set.
-
-/**
- * 
- * **/				
-//--------------------------------------AJOUTER ET MODIFICATION A PARTIR DE CETTE LIGNE, COMMMUNICATION D'AGENT, POUR LE MERGE DE MAP ET DECIDER NEXTNODE-----------------------
-//===============================================================================================================
-
-				//declare position
-/*send the message to declare my position to the agent nearby*/
 				
 				ACLMessage msg=new ACLMessage(ACLMessage.INFORM);
 				msg.setSender(this.myAgent.getAID());
@@ -256,17 +230,26 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 			this.myAgent.getDefaultDF().setName(((AbstractDedaleAgent)this.myAgent).getAID().getLocalName()); 
 			// The agent AID
 			ServiceDescription sd2 = new ServiceDescription () ;
-			sd2.setType( "finiExplo" ); // You have to give a
+			sd2.setType("finiExplo"); // You have to give a
 			sd2.setName(((AbstractDedaleAgent)this.myAgent).getLocalName());//(local)name of
 			dfd2.addServices(sd2);
 			//Register the service
 			DFAgentDescription result;
 			try {
-				result = DFService.register( this.myAgent , dfd );
-				System.out. println ( "-------\n"+result+ "results \n--------" ) ;
+				result = DFService.register( this.myAgent , dfd2 );
+				System.out. println ( "-------inscription finiExplo---"+this.myAgent.getLocalName()+" \n--------" ) ;
 			} catch (FIPAException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			}
+			List<String> finiExpl=((ExploreCoopAgent) this.myAgent).getAgentsListDF("finiExplo") ;
+			if(finiExpl.isEmpty()) {
+				System.out.println("finiExpl est vide");
+			}
+			else {
+				for(String s : finiExpl) {
+					System.out.println("finiExpl contient "+s);
+				}
 			}
 		}
 

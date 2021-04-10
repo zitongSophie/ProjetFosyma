@@ -103,22 +103,23 @@ public class ShareMapBehaviour extends SimpleBehaviour{
 			//System.out.println(this.myAgent.getLocalName()+" shared map");
 		
 		}
-		MessageTemplate msgTemplate=MessageTemplate.and(
-				MessageTemplate.MatchProtocol("Finished"),
-				MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-		ACLMessage msgReceived=this.myAgent.receive(msgTemplate);
-		if(msgReceived!=null) {
-			List<String> finiExpl=((ExploreCoopAgent) this.myAgent).getAgentsListDF("finiExplo") ;
-			finiExpl.remove(this.myAgent.getLocalName());
-			if(((ExploreCoopAgent) this.myAgent).isIdenticalList (this.agentsInfo.keySet(),finiExpl )){
-				this.finished=true;
+
+
+		List<String> finiExpl=((ExploreCoopAgent) this.myAgent).getAgentsListDF("finiExplo") ;
+		if(!finiExpl.isEmpty()) {
+			if(finiExpl.contains(this.getAgent().getLocalName())) {
+				finiExpl.remove(this.myAgent.getLocalName());
+				if(!finiExpl.isEmpty()) {
+					if(((ExploreCoopAgent) this.myAgent).isIdenticalList (this.agentsInfo.keySet(),finiExpl )){
+						this.finished=true;
+					}	
+				}
 			}
 		}
 	}
 
 	@Override
 	public boolean done() {
-		// TODO Auto-generated method stub
 		if(finished) {
 			System.out.println("ShareMapBehaviour is finished of "+this.myAgent.getLocalName());
 		}
