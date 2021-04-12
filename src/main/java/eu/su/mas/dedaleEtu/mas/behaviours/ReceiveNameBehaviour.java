@@ -1,9 +1,11 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
+import eu.su.mas.dedaleEtu.mas.knowledge.SMPosition;
 import jade.core.AID;
 //import jade.core.AID;
 import jade.core.Agent;
@@ -18,6 +20,10 @@ public class ReceiveNameBehaviour extends OneShotBehaviour {
 	private List<String> agentsToContact;
 	//private MapRepresentation myMap;
 	//private HashMap<String,Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>>  myInfo;
+	//------------------------------------------------
+	private List<String> posAgentReceived=new ArrayList<String>();
+	//------------------------------------------------
+	
 	
 	public ReceiveNameBehaviour(final Agent myagent,List<String> toContact) {
 		super(myagent);
@@ -46,18 +52,23 @@ public class ReceiveNameBehaviour extends OneShotBehaviour {
 			//String sender=msg.getContent();
 			this.agentsToContact.add(msg.getSender().getLocalName());	//get all the agents who is here
 			msg = this.myAgent.receive(msgTemplate);
+			this.posAgentReceived.add(msg.getContent());
 		}
 		
 		final ACLMessage msg2 = new ACLMessage(ACLMessage.REQUEST);
 		msg2.setProtocol("SHARE");
 				//2) Set the sender and the receiver(s)
 		msg2.setSender(this.myAgent.getAID());
-		msg2.addReceiver(this.myAgent.getAID()); 
+		msg2.addReceiver(this.myAgent.getAID());
+		// UTILE POUR LA CHASSE, obtenir les positions des autres qui sont a cote de l agent
+		SMPosition smsg=new SMPosition(((AbstractDedaleAgent) this.myAgent).getCurrentPosition(),this.posAgentReceived);
+		try {					
+			msg2.setContentObject(smsg);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		//4) send the message
 		((AbstractDedaleAgent)  this.myAgent).sendMessage(msg2);
-		//System.out.println("-----------------"+this.agentsToContact);
-		//this.myAgent.addBehaviour(new ShareMapBehaviour(this.myAgent,this.agentsToContact,this.myMap,this.myInfo));
-		//this.finished=true;
 	}
 
 

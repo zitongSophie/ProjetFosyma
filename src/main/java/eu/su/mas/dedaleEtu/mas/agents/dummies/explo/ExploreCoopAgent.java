@@ -222,4 +222,47 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 	    return true; //will only return true if sets are equal
 	}	
 	
+	public Set<String> getAgentName() {
+		return this.otherInfo.keySet();
+	}
+	
+	
+	
+	public void inscription(String type) {
+		DFAgentDescription dfd = new DFAgentDescription();
+		dfd.setName(this.getAID()); // The agent AID
+		ServiceDescription sd = new ServiceDescription () ;
+		sd.setType( type ); // You have to give a
+		sd.setName(this.getLocalName());//(local)name of
+		dfd.addServices(sd);
+		//Register the service
+
+		DFAgentDescription result;
+		try {
+			result = DFService.register( this , dfd );
+			System.out. println ( "-------\n"+this.getLocalName()+ " est devenu "+type+"\n--------" ) ;
+		} catch (FIPAException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public void desincription(String type) {
+		DFAgentDescription dfd = new DFAgentDescription();
+		this.getDefaultDF().setName(this.getLocalName()); 
+		// The agent AID
+		ServiceDescription sd = new ServiceDescription () ;
+		sd.setType(type ); // You have to give a
+		sd.setName(this.getLocalName());//(local)name of
+		dfd.addServices(sd);
+		//Register the service
+
+		try {
+			DFService.deregister( this, dfd );
+			System.out. println ( "------- supprime agent courreur"+this.getLocalName()+" \n--------" ) ;
+		} catch (FIPAException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }

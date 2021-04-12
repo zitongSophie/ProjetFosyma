@@ -9,14 +9,14 @@ import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
 public class SMPosition implements Serializable {
 
 	private static final long serialVersionUID = -7126302223478378640L;
-	private String position;
+	private String position; //ma POSITION ou NEXT POSITION
 	private List<String> predictPosGolem;
 	private List<String> agentsArgue;
 
-	public SMPosition(String pos,List<String>predicPosGolem,List<String> agentsArgue) {
+	public SMPosition(String pos,List<String>predicPosGolem) {// CHG ENLEVER agenArgue
 		position=pos; //position du golem
 		this.predictPosGolem=predictPosGolem; //liste des positions possibles du golem
-		this.agentsArgue=agentsArgue;
+		//this.agentsArgue=agentsArgue;
 		// TODO Auto-generated constructor stub
 	}
 	public String getpos() {
@@ -26,8 +26,9 @@ public class SMPosition implements Serializable {
 	public List<String> getPredicPosGolem() {
 		return predictPosGolem;
 	}
+	/*
 	public List<String> getAgentsAgue() {
 		return agentsArgue;
-	}
+	}*/
 
 }

@@ -42,7 +42,7 @@ public class ShareMapBehaviour extends SimpleBehaviour{
 	 * @param mymap (the map to share)
 	 * @param receivers the list of agents to send the map to
 	 */
-	public ShareMapBehaviour(Agent a,long period,MapRepresentation mymap, List<String> receivers, HashMap<String,Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>> agentsInfo) {
+	public ShareMapBehaviour(Agent a,MapRepresentation mymap, List<String> receivers, HashMap<String,Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>> agentsInfo) {
 		super(a);
 		this.myMap=mymap;
 		this.listReceivers=receivers;	
@@ -122,6 +122,7 @@ public class ShareMapBehaviour extends SimpleBehaviour{
 	public boolean done() {
 		if(finished) {
 			System.out.println("ShareMapBehaviour is finished of "+this.myAgent.getLocalName());
+			this.myAgent.addBehaviour(new FindGolemBehaviour((AbstractDedaleAgent) this.myAgent,this.myMap));
 		}
 		return finished;
 	}

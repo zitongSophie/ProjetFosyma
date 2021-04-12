@@ -65,26 +65,25 @@ public class FindGolemBehaviour extends SimpleBehaviour {
 	 * Current knowledge of the agent regarding the environment
 	 */
 	private MapRepresentation myMap;
-	private HashMap<String,Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>>  myInfo;
 	private List<String> myAgentToAsk;
-	private HashMap<String,String>agents_pos;
 	private List<String> strenchPos;
-
+	private String myPosition; //CHG
+	private String myNexNode; // pour verifier quand un agent echange avec myAgent que ce n est pas la position d'un autre agent
+	private List<String> posAgentNear;
+	
 /**
  * 
  * @param myagent
  * @param myMap known map of the world the agent is living in
  * @param agentNames name of the agents to share the map with
  */																												//add attribute
-	public FindGolemBehaviour(final AbstractDedaleAgent myagent, MapRepresentation myMap,HashMap<String,Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>> info,List<String> ata,HashMap<String,String> pos) {
+	public FindGolemBehaviour(final AbstractDedaleAgent myagent, MapRepresentation myMap) {
 		super(myagent);
-		this.myMap=myMap;
-		this.myInfo=info;	
-		this.myAgentToAsk=ata;
-		this.myAgentToAsk=((ExploreCoopAgent) this.myAgent).setAgentToAsk();
+		this.myMap=myMap;	
 		this.myAgent=myagent;
-		this.agents_pos=pos;
 		this.strenchPos=new ArrayList<String>();
+		this.posAgentNear=new ArrayList<String>();
+		this.myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition(); //CHG
 	}
 
 	@Override
@@ -92,67 +91,65 @@ public class FindGolemBehaviour extends SimpleBehaviour {
 
 		if(this.myMap==null) {
 			System.out.println("Map is null, forget to explore the map");
-
 		}
-
-		//0) Retrieve the current position
-		String myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
-
-		if (myPosition!=null){
-			//List of observable from the agent's current position
-			List<Couple<String,List<Couple<Observation,Integer>>>> lobs=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
-
-			try {
-				this.myAgent.doWait(250);
-			} catch (Exception e) {
-				e.printStackTrace();
+		//Envoie de message a tous le monde y compris moi meme
+			//check position cherche a reccueillir les reponses lorsqu il recoit un message de la part de lui meme
+		//-----------------------------------------------------------------------
+		if(this.myPosition==((AbstractDedaleAgent)this.myAgent).getCurrentPosition()) {
+			this.myAgent.addBehaviour(new CheckPosBehaviour(this.myAgent,this.finished,this.myNexNode));
+			ACLMessage msg=new ACLMessage(ACLMessage.REQUEST);
+			msg.setSender(this.myAgent.getAID());
+			msg.setProtocol("CHECK_NOBODY_PROTOCOL");
+			msg.setContent(myPosition);
+			msg.addReceiver(this.myAgent.getAID());
+			for (String agentName : ((ExploreCoopAgent) this.myAgent).getAgentName()){
+				msg.addReceiver(new AID(agentName,AID.ISLOCALNAME));
 			}
-
-
-			//2) get the surrounding nodes and, if not in closedNodes, add them to open nodes.
+			((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
+		}
+		if(!finished) {
+			//_________________________________________________________________________
+			this.myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 			String nextNode=null;
-			Iterator<Couple<String, List<Couple<Observation, Integer>>>> iter=lobs.iterator();
-			while(iter.hasNext()){
-				String obstype=iter.next().getRight().get(0).getLeft().getName();
-				if(obstype=="strench") {
-					return;
+			if (this.myPosition!=null){
+				//List of observable from the agent's current position
+				List<Couple<String,List<Couple<Observation,Integer>>>> lobs=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
+
+				try {
+					this.myAgent.doWait(250);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}	
+				Iterator<Couple<String, List<Couple<Observation, Integer>>>> iter=lobs.iterator();
+				while(iter.hasNext()){
+					String obstype=iter.next().getRight().get(0).getLeft().getName();
+					if(obstype=="Stench") {
+						this.strenchPos.add(iter.next().getLeft());
+					}
+				
 				}
-			
+					
+					ACLMessage msg=new ACLMessage(ACLMessage.INFORM);
+					msg.setSender(this.myAgent.getAID());
+					msg.setProtocol("WHO_IS_HERE_PROTOCOL");
+					msg.setContent(myPosition);
+					for (String agentName : this.myAgentToAsk) {
+						msg.addReceiver(new AID(agentName,AID.ISLOCALNAME));
+					}
+					((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
+					
+					((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
 			}
-			
-			//3) while openNodes is not empty, continues.
-			if (!this.myMap.hasOpenNode()){
-				//Explo finished
-				finished=true;
-				System.out.println(this.myAgent.getLocalName()+"\t"+myPosition+" \n\n\n- Exploration successufully done, behaviour removed.\n\n\n");
-			}else{
-				
-				if (nextNode==null){
-					//nextNode=this.myMap.getNextNode(myPosition,this.agents_pos,this.myAgentToShareMap,lobs);//getShortestPath(myPosition,this.openNodes.get(0)).get(0);
-				
-				}else {
-					//System.out.println("nextNode notNUll - "+this.myAgent.getLocalName()+"-- list= "+this.myMap.getOpenNodes()+"\n -- nextNode: "+nextNode);
-				}
-				
-				ACLMessage msg=new ACLMessage(ACLMessage.INFORM);
-				msg.setSender(this.myAgent.getAID());
-				msg.setProtocol("WHO_IS_HERE_PROTOCOL");
-				msg.setContent(myPosition);
-				for (String agentName : this.myAgentToAsk) {
-					msg.addReceiver(new AID(agentName,AID.ISLOCALNAME));
-				}
-				((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
-				
-				
-				((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
-			}
-		}
+		}	
 	}
 
 
 
 	@Override
 	public boolean done() {
+		if(finished) {
+			System.out.println(this.myAgent.getLocalName()+" block the Wumpus");
+		}
 		return finished;
 	}
 	

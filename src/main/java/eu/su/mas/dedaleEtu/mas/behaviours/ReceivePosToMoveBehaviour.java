@@ -76,14 +76,7 @@ public class ReceivePosToMoveBehaviour extends SimpleBehaviour {
 				ACLMessage msg2 = new ACLMessage(ACLMessage.REQUEST);
 				msg.setProtocol("FIND_SOLUTION_PROTOCOL");
 				msg.setSender(this.myAgent.getAID());
-				try {
-					for (String s : ((SMPosition) msg2.getContentObject()).getAgentsAgue() ){
-						msg.addReceiver(new AID(s, AID.ISLOCALNAME));  
-					}
-				} catch (UnreadableException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				//manque receiver
 				msg.setContent("ENCHERE");
 				//msg.setContent(this.myAgent.getLocalName());
 		        System.out.println(this.myAgent.getLocalName()+" send a message");

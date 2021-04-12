@@ -86,7 +86,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 		if(this.myMap==null) {
 			this.myMap= new MapRepresentation();
 //===============add behaviour=====
-			this.myAgent.addBehaviour(new ShareMapBehaviour(this.myAgent,500,this.myMap,this.myAgentToShareMap,this.myInfo));
+			this.myAgent.addBehaviour(new ShareMapBehaviour(this.myAgent,this.myMap,this.myAgentToShareMap,this.myInfo));
 			this.myAgent.addBehaviour(new ReceiveMapBehaviour(this.myAgent,this.myMap));
 			//this.myAgent.addBehaviour(new ReceiveDeclareBehaviour(this.myAgent,this.agents_pos));
 			this.myAgent.addBehaviour(new MeBehaviour(this.myAgent,this.agents_pos));
