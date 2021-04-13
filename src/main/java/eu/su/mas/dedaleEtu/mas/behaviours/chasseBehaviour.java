@@ -57,7 +57,6 @@ public class chasseBehaviour extends SimpleBehaviour {
 		if(this.myMap==null) {
 			this.myMap= new MapRepresentation();
 		}
-
 		//0) Retrieve the current position
 		String myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 
@@ -73,110 +72,52 @@ public class chasseBehaviour extends SimpleBehaviour {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-
-			//1) remove the current node from openlist and add it to closedNodes.
-			this.myMap.addNode(myPosition, MapAttribute.closed);
-			Node nn= this.myMap.getG().getNode(myPosition);
-			for(String s : this.myInfo.keySet()) {
-				Couple<Integer,SerializableSimpleGraph<String, MapAttribute>> c;
-				//c=((ExploreCoopAgent) this.myAgent).setSgNode(s,myPosition,MapAttribute.open);
-				SerializableSimpleGraph<String,MapAttribute> updateSG;
-				
-				//updateSG=this.myMap.addNodeSG(this.myInfo.get(s).getRight(), myPosition,MapAttribute.closed);
-				updateSG=this.myInfo.get(s).getRight();
-				//System.out.println("dedans jbjbjbjbjbjb "+nn.getId());
-				updateSG.addNode(nn.getId(),MapAttribute.valueOf((String)nn.getAttribute("ui.class")));
-				c=new Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>(this.myInfo.get(s).getLeft(), updateSG);
-				this.myInfo.put(s, c);
-				//chgt indice couple
-				Couple<Integer,SerializableSimpleGraph<String, MapAttribute>> newc;
-				// 1 car la carte a partage est vide puisque l'information bien d etre partage
-				newc=((ExploreCoopAgent) this.myAgent).setCouple(s,this.myInfo.get(s).getRight(),2);
-				this.myInfo.put(s, newc );
-				//System.out.println("apres moi "+this.myInfo.get(s).getRight().getNode(myPosition));
-			}
+			//cas normale :chercher aleatoire dans le map
+			List<String>caseproche=this.myMap.getnodeAdjacent(myPosition) ;
+			Integer r=(int) Math.random() * ( caseproche.size()  );
+			String nextNode=caseproche.get(r);
 			
-			//2) get the surrounding nodes and, if not in closedNodes, add them to open nodes.
-			String nextNode=null;
-			Iterator<Couple<String, List<Couple<Observation, Integer>>>> iter=lobs.iterator();
-			while(iter.hasNext()){
-				String nodeId=iter.next().getLeft();
-				boolean isNewNode=this.myMap.addNewNode(nodeId);
-				//faire la meme chose dans chaque sg de myInfo
-				//obtenir l identifiant de l arete creer en regardant si nbEdge a augmente
-				Integer edgeIDbefore=this.myMap.getNbEdges();
-				//the node may exist, but not necessarily the edge
-				if (myPosition!=nodeId) {
-					this.myMap.addEdge(myPosition, nodeId);
-					if (nextNode==null && isNewNode) nextNode=nodeId;
-				}
-				Integer edgeIDafter=this.myMap.getNbEdges();
-				Node n=this.myMap.getG().getNode(nodeId);
-				for(String s : this.myInfo.keySet()) {
-					Couple<Integer,SerializableSimpleGraph<String, MapAttribute>> c;
-					SerializableSimpleGraph<String,MapAttribute> updateSG;
-					updateSG=this.myInfo.get(s).getRight();
-					updateSG.addNode( n.getId(),MapAttribute.valueOf((String)n.getAttribute("ui.class")));
-					//System.out.println("node add "+updateSG.getNode(n.getId()));
-					if (myPosition!=nodeId) {
-						updateSG.addEdge(nn.getEdgeBetween(n).getId(),nn.getId(),n.getId());
-					}
-					c=new Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>(this.myInfo.get(s).getLeft(), updateSG);
-					this.myInfo.put(s, c);
-					//System.out.println("apres moi "+this.myInfo.get(s).getRight().getNode(myPosition));
-				}
-				
-			}
 			
-			//3) while openNodes is not empty, continues.
-			if (!this.myMap.hasOpenNode()){
-				//Explo finished
-				finished=true;
-				System.out.println(this.myAgent.getLocalName()+"\t"+myPosition+" \n\n\n- Exploration successufully done, behaviour removed.\n\n\n");
-			}else{
-				
-				//4) select next move.
-				//4.1 If there exist one open node directly reachable, go for it,
-				//	 otherwise choose one from the openNode list, compute the shortestPath and go for it
-				if (nextNode==null){
-					//no directly accessible openNode
-					//chose one, compute the path and take the first step.
-//					System.out.println(this.myAgent.getLocalName()+" begin\t myposition "+myPosition+"\t agents_pos "+agents_pos);
-/**###changement##	
- * #**/
-					
-					//changer ce ligne
-					nextNode=this.myMap.getNextmove(myPosition,this.agents_pos,this.myAgentToShareMap,lobs,this.PosOdeurs);//getShortestPath(myPosition,this.openNodes.get(0)).get(0);
-					
-//					System.out.println("\n"+this.myAgent.getLocalName()+"-- list= "+this.myMap.getOpenNodes()+"| nextNode: "+nextNode+"\n");
-					
-					//System.out.println("normal iteration"+this.myMap.getNextNode(myPosition, this.agents_pos));
-				}else {
-					//System.out.println("nextNode notNUll - "+this.myAgent.getLocalName()+"-- list= "+this.myMap.getOpenNodes()+"\n -- nextNode: "+nextNode);
+			//mettre a jour l'odeurs obseve
+			List<String>currentPosOdeurs=new ArrayList<String>();
+			for (Couple<String,List<Couple<Observation,Integer>>> c:lobs) {
+				if(c.getRight().size()!=0) {
+					currentPosOdeurs.add(c.getLeft());
 				}
-				//declare position
-/*send the message to declare my position to the agent nearby*/
-				
+			}
+			if(currentPosOdeurs.size()!=0) {
+				this.PosOdeurs.clear();
+				for(String s :currentPosOdeurs) {
+					this.PosOdeurs.add(s);
+				}
+			}
+			if(this.PosOdeurs.size()!=0) {
+				r=(int) Math.random() * ( this.PosOdeurs.size()  );
+				this.myMap.getShortestPath(myPosition, this.PosOdeurs.get(r)).get(0);
+			}
+			else {
 				ACLMessage msg=new ACLMessage(ACLMessage.INFORM);
 				msg.setSender(this.myAgent.getAID());
 				msg.setProtocol("WHO_IS_HERE_PROTOCOL");
 				msg.setContent(myPosition);
 				for (String agentName : this.myAgentToAsk) {
 					msg.addReceiver(new AID(agentName,AID.ISLOCALNAME));
+					((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
 				}
-				((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
-				
-				
-				((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
 			}
+			
+			
+			((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
 		}
-
 	}
+		
+
 
 	@Override
 	public boolean done() {
 		// TODO Auto-generated method stub
 		return false;
 	}
+	
 
 }

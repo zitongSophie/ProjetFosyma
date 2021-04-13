@@ -290,7 +290,8 @@ public class MapRepresentation implements Serializable {
 	
 	
 
-	public List<String> getnodeAdjacent(Node n){
+	public List<String> getnodeAdjacent(String id){
+		Node n=this.getG().getNode(id);
 		List<String>nodeadj=new ArrayList<String>();
 		Iterator<Edge> iterE=n.edges().iterator();
 		while (iterE.hasNext()){
@@ -301,57 +302,7 @@ public class MapRepresentation implements Serializable {
 		return nodeadj;
 	}
 	
-	public List<String>getPosOdeurs(List<Couple<String,List<Couple<Observation,Integer>>>> lobs){
-		List<String>PosOdeurs=new ArrayList<String>();
-		for (Couple<String,List<Couple<Observation,Integer>>> c:lobs) {
-			if(c.getRight().size()!=0) {
-				PosOdeurs.add(c.getLeft());
-			}
-		}
-		return PosOdeurs;
-		
-	}
-
-
-	public Couple<List<String>,List<String>>predictPosPossibleETimpossible(List<Couple<String,List<Couple<Observation,Integer>>>> lobs){
-		List<String>Pos=new ArrayList<String>();
-		List<String>Posimpossible=new ArrayList<String>();
-		Couple<List<String>,List<String>> pos_impos=new Couple<List<String>,List<String>> (Pos, Posimpossible);
-		
-		for (Couple<String,List<Couple<Observation,Integer>>> c:lobs) {
-			if(c.getRight().size()!=0) {
-				Pos.add(c.getLeft());
-			}
-			else {
-				Posimpossible.add(c.getLeft());
-			}
-		}
-		return pos_impos;
-		
-	}
-
-	public String getNextmove(String myPosition,HashMap<String,String> agents_pos,List<String> asm,List<Couple<String,List<Couple<Observation,Integer>>>> lobs,List<String>PosOdeurs) {
-		//s'il detecte pas de odeur
-		if(this.getPosOdeurs(lobs).size()==0) {
-			// et il ne detecte pas de odeur etape avant ,explorer le graph normalement, dans le cas de pas encore finir explorer.
-			if(PosOdeurs.size()==0) {
-				return this.getNextNode(myPosition, agents_pos, asm, lobs);
-			}
-			//il a odeur etape avant ,mal choisir le chemin,revient sur un des cas il y a odeur avant.
-			else {
-				PosOdeurs.remove(myPosition);
-				Integer r=(int) Math.random() * ( PosOdeurs.size()  );
-				return getShortestPath(myPosition, PosOdeurs.get(r)).get(0);
-			}
-		}else {
-			PosOdeurs=this.getPosOdeurs(lobs);
-		}
-		Integer r=(int) Math.random() * ( PosOdeurs.size()  );
-		return getShortestPath(myPosition, PosOdeurs.get(r)).get(0);
-	}
 	
-
-		
 
 	public List<String> getOpenNodes(){
 		return this.g.nodes()
