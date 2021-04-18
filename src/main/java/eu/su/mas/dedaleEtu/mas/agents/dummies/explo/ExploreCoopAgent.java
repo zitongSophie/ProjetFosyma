@@ -1,6 +1,7 @@
 package eu.su.mas.dedaleEtu.mas.agents.dummies.explo;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -56,6 +57,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 	private HashMap<String,Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>> otherInfo;
 	private List<String> agentToShareMap; //agents to share the map
 	private List<String> agentToAsk;
+	private Date temps=new java.util.Date();
 	//
 
 	/**
@@ -78,7 +80,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(this.getAID()); // The agent AID
 		ServiceDescription sd = new ServiceDescription () ;
-		sd.setType( "courreur" ); // You have to give a
+		sd.setType( "coureur" ); // You have to give a
 		sd.setName(this.getLocalName());//(local)name of
 		dfd.addServices(sd);
 		//Register the service
@@ -93,10 +95,8 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		}
 		//initialisation 
 		this.otherInfo=new HashMap<String,Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>>();
-		List<String> agentsNames=this.getAgentsListDF("courreur");
+		List<String> agentsNames=this.getAgentsListDF("coureur");
 		agentsNames.remove(this.getLocalName());
-
-		
 		for(String s: agentsNames) {
 			agents_pos.put(s,(String)"-1");
 			
@@ -113,7 +113,6 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 				this.agentToAsk.add(s);
 			}
 		}
-
 		List<Behaviour> lb=new ArrayList<Behaviour>();
 		
 		/************************************************
@@ -264,5 +263,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
 	}
+
 }
