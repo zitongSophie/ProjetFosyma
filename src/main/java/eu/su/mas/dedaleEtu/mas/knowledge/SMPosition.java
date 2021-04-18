@@ -12,12 +12,13 @@ public class SMPosition implements Serializable {
 	private String position; //ma POSITION ou NEXT POSITION
 	private List<String> predictPosGolem;
 	private List<String> agentsArgue;
+	private String myDate;
 
-	public SMPosition(String pos,List<String>predicPosGolem) {// CHG ENLEVER agenArgue
+	public SMPosition(String pos,List<String> predictoPosGolem,String mydate) {// CHG ENLEVER agenArgue
 		position=pos; //position du golem
 		this.predictPosGolem=predictPosGolem; //liste des positions possibles du golem
 		//this.agentsArgue=agentsArgue;
-		// TODO Auto-generated constructor stub
+		this.myDate=mydate;
 	}
 	public String getpos() {
 		return position;
@@ -25,6 +26,10 @@ public class SMPosition implements Serializable {
 
 	public List<String> getPredicPosGolem() {
 		return predictPosGolem;
+	}
+	
+	public String getDate() {
+		return myDate;
 	}
 	/*
 	public List<String> getAgentsAgue() {

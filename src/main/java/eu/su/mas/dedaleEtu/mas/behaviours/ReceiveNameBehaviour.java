@@ -31,7 +31,6 @@ public class ReceiveNameBehaviour extends OneShotBehaviour {
 		this.agentsToContact=new ArrayList<String>();
 		//this.myMap=map;
 		//this.myInfo=info;
-
 	}
 
 	@Override
@@ -61,7 +60,7 @@ public class ReceiveNameBehaviour extends OneShotBehaviour {
 		msg2.setSender(this.myAgent.getAID());
 		msg2.addReceiver(this.myAgent.getAID());
 		// UTILE POUR LA CHASSE, obtenir les positions des autres qui sont a cote de l agent
-		SMPosition smsg=new SMPosition(((AbstractDedaleAgent) this.myAgent).getCurrentPosition(),this.posAgentReceived);
+		SMPosition smsg=new SMPosition(((AbstractDedaleAgent) this.myAgent).getCurrentPosition(),this.posAgentReceived,"");
 		try {					
 			msg2.setContentObject(smsg);
 		} catch (IOException e) {
