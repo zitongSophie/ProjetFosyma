@@ -269,7 +269,7 @@ public class MapRepresentation implements Serializable {
 			
 		}
 		List<String> nodeAdj=this.nodeAdjacent(mypath.get(0),lobs, posAgent);
-		Integer r=(int) Math.random() * ( nodeAdj.size()  );
+		Integer r=(int)( Math.random() *  nodeAdj.size()  );
 		if(posAgent.contains(mypath.get(0))) {
 			return nodeAdj.get(r);
 		}
