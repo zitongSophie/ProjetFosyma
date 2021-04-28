@@ -3,6 +3,7 @@ package eu.su.mas.dedaleEtu.mas.behaviours;
 import java.io.IOException;
 import eu.su.mas.dedaleEtu.mas.agents.dummies.explo.ExploreCoopAgent;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -22,6 +23,7 @@ import eu.su.mas.dedaleEtu.mas.behaviours.ShareMapBehaviour;
 import org.graphstream.graph.Node;
 import jade.core.AID;
 import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.FSMBehaviour;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
@@ -194,12 +196,35 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 	@Override
 	public boolean done() {
 		if(finished) {
+			
 			//s'ajouter comme fini
 			((ExploreCoopAgent) this.myAgent).setFini(this.myAgent.getLocalName());
 			this.myAgent.addBehaviour(new SendEndBehaviour(this.myAgent,this.myAgentToAsk));
-			this.myAgent.addBehaviour(new MoveTestBehaviour(this.myAgent,this.myMap));
 			this.myAgent.addBehaviour(new AddEndBehaviour(this.myAgent,this.myMap,this.myAgentToAsk));
 			System.out.println(this.myAgent.getLocalName()+" remove ExploCoopBehaviour");
+			
+			HashMap<String,List<String>> myStench=new HashMap<String,List<String>>();
+			Date tps=new java.util.Date();
+			List<String> agentproche=new ArrayList<String>();
+			// State names
+			String c = "chasse"; 
+			String r = "receive"; 
+			String s = "send"; 
+			String t="termine";
+			String posavant="-1";
+			FSMBehaviour fsm = new FSMBehaviour(this.myAgent); // Define the different states and behaviours 
+			fsm.registerFirstState (new ChasseBehaviour(myAgent, myMap, agents_pos, myStench, tps, agentproche,posavant), c); 
+			fsm.registerState (new ReceiveBehaviour(myAgent, agentproche, agents_pos, myStench, tps), r);
+			fsm.registerState (new SendBehaviour(myAgent, agentproche, myStench), s); // Register the transitions
+			fsm.registerLastState(new IsTermineBehaviour(myAgent, myMap, agents_pos, myStench, tps, agentproche,posavant,posavant),t);
+			//fsm.registerDefaultTransition (c,s);//Default 
+			fsm.registerDefaultTransition (s,r);//Default 
+			fsm.registerDefaultTransition (r,t);
+			fsm. registerTransition (c,t, 1);//Cond 2 
+			fsm. registerTransition (c,s, 2);//Cond 1 
+			fsm. registerTransition (t,s, 2);//Cond 1 
+			fsm. registerTransition (t,s, 1);//Cond 1 
+			this.myAgent.addBehaviour(fsm);
 		}
 		return finished;
 	}

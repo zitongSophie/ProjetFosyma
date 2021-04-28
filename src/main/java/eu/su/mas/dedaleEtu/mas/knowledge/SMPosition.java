@@ -1,6 +1,7 @@
 package eu.su.mas.dedaleEtu.mas.knowledge;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 
 import dataStructures.serializableGraph.SerializableSimpleGraph;
@@ -12,13 +13,13 @@ public class SMPosition implements Serializable {
 	private String position; //ma POSITION ou NEXT POSITION
 	private List<String> predictPosGolem;
 	private List<String> agentsArgue;
-	private String myDate;
+	private Date myDate;
 
-	public SMPosition(String pos,List<String> predictoPosGolem,String mydate) {// CHG ENLEVER agenArgue
+	public SMPosition(String pos,List<String> predictoPosGolem,Date date) {// CHG ENLEVER agenArgue
 		position=pos; //position du golem
 		this.predictPosGolem=predictPosGolem; //liste des positions possibles du golem
 		//this.agentsArgue=agentsArgue;
-		this.myDate=mydate;
+		this.myDate=date;
 	}
 	public String getpos() {
 		return position;
@@ -28,7 +29,7 @@ public class SMPosition implements Serializable {
 		return predictPosGolem;
 	}
 	
-	public String getDate() {
+	public Date getDate() {
 		return myDate;
 	}
 	/*

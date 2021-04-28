@@ -61,7 +61,7 @@ public class ReceiveNameBehaviour extends SimpleBehaviour {
 		msg2.setSender(this.myAgent.getAID());
 		msg2.addReceiver(this.myAgent.getAID());
 		// UTILE POUR LA CHASSE, obtenir les positions des autres qui sont a cote de l agent
-		SMPosition smsg=new SMPosition(((AbstractDedaleAgent) this.myAgent).getCurrentPosition(),this.posAgentReceived,"");
+		SMPosition smsg=new SMPosition(((AbstractDedaleAgent) this.myAgent).getCurrentPosition(),this.posAgentReceived,null);
 		try {					
 			msg2.setContentObject(smsg);
 		} catch (IOException e) {

@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.behaviours.startMyBehaviours;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExploCoopBehaviour;
@@ -327,6 +328,24 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 	public List<String> getFiniExpl(){
 		return this.finiExpl;
 	}
+	//--------fonction utile pour la partie chasse
+	
+	public List<String> lstench(){
+		List<Couple<String,List<Couple<Observation,Integer>>>> lobs=this.observe();
+		List<String> lstench=new ArrayList<String>();
+		for (Couple<String,List<Couple<Observation,Integer>>> cobs : lobs) {
+			String pos=cobs.getLeft();
+			for(Couple<Observation,Integer> isStench: cobs.getRight()) {
+				if(isStench.getLeft().getName().equals("Stench") ){
+					lstench.add(pos);
+					break;
+				}
+			}
+			
+		}
+		return lstench;
+	}
+
 		
 
 }
