@@ -31,7 +31,6 @@ public class ChasseBehaviour extends OneShotBehaviour {
 	 * Current knowledge of the agent regarding the environment
 	 */
 	private MapRepresentation myMap;
-	private List<String> agentsNames;
 	private HashMap<String,String>agents_pos;
 	private HashMap<String,List<String>> myStench;
 	private String posavant="-1";
@@ -51,10 +50,6 @@ public class ChasseBehaviour extends OneShotBehaviour {
 			this.myAgent=myagent;
 			this.agents_pos=pos;
 			this.myTemps=tps;
-			this.agentsNames=new ArrayList<String>();
-			this.agentsNames.add("1stAgent");
-			this.agentsNames.add("2ndAgent");
-			this.agentsNames.remove(this.myAgent.getLocalName());
 			this.agentproche=ata;
 			this.posavant=posavant;
 			
@@ -117,13 +112,13 @@ public class ChasseBehaviour extends OneShotBehaviour {
 				caseproche=this.myMap.getnodeAdjacent(pos) ;
 				r=(int)( Math.random() *  caseproche.size()  );
 				nextNode=this.myMap.getShortestPath(myPosition, caseproche.get(r)).get(0);
-				System.out. println ( "-------mytime"+this.myTemps+"stench "+lstench+this.myAgent.getLocalName()+" next move"+nextNode+"agentname"+this.agentsNames+"\n--------" ) ;
+				System.out. println ( "-------mytime"+this.myTemps+"stench "+lstench+this.myAgent.getLocalName()+" next move"+nextNode+"agentname\n--------" ) ;
 			}
-			System.out. println ( "----mytime "+this.myTemps+" agentproche "+this.agentproche+" stench "+lstench+this.myStench+this.myAgent.getLocalName()+" next move"+nextNode+"agentname"+this.agentsNames+" chassebehaviour\n--------" ) ;
+			System.out. println ( "----mytime "+this.myTemps+" agentproche "+this.agentproche+" stench "+lstench+this.myStench+this.myAgent.getLocalName()+" next move"+nextNode+"agentname chassebehaviour\n--------" ) ;
 			myTemps=new java.util.Date();
 			this.posavant=myPosition;
 			((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
-			this.myAgent.addBehaviour(new IsTermineBehaviour(myAgent, myMap, agents_pos, myStench, myTemps, agentproche,posavant,nextNode));
+			this.myAgent.addBehaviour(new IsTermineBehaviour(myAgent, myMap, agents_pos, myStench, myTemps, agentproche,posavant,nextNode,0));
 		}
 		
 	}

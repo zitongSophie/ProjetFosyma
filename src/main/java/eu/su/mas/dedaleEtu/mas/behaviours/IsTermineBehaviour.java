@@ -30,7 +30,6 @@ public class IsTermineBehaviour extends OneShotBehaviour {
 	private boolean isBlock=false;
 	
 	private MapRepresentation myMap;
-	private List<String> agentsNames;
 	private HashMap<String,String>agents_pos;
 	private HashMap<String,List<String>> myStench;
 	private Date myTemps;
@@ -38,52 +37,58 @@ public class IsTermineBehaviour extends OneShotBehaviour {
 	private int exitvalue=2;
 	private String posavant;
 	private String nextNode;
+	private int countblock;
 	/**
 	 * 
 	 * @param myagent
 	 * @param myMap known map of the world the agent is living in
 	 * @param agentNames name of the agents to share the map with
 	 */																												//add attribute
-	public IsTermineBehaviour(final Agent myagent, MapRepresentation myMap,HashMap<String,String> pos,HashMap<String,List<String>> myStench,Date tps,List<String>ata,String posavant,String nextNode) {
+	public IsTermineBehaviour(final Agent myagent, MapRepresentation myMap,HashMap<String,String> pos,HashMap<String,List<String>> myStench,Date tps,List<String>ata,String posavant,String nextNode,int countblock ) {
 		super(myagent);
 		this.myMap=myMap;
 		this.myStench=myStench;	
 		this.myAgent=myagent;
 		this.agents_pos=pos;
 		this.myTemps=tps;
-		this.agentsNames=new ArrayList<String>();
-		this.agentsNames.add("1stAgent");
-		this.agentsNames.add("2ndAgent");
-		this.agentsNames.remove(this.myAgent.getLocalName());
 		this.agentproche=ata;
 		this.posavant=posavant;
 		this.nextNode=nextNode;
+		this.countblock=countblock;
 		
 	}
 
 	@Override
 	public void action() {
-		if(posavant==((AbstractDedaleAgent)this.myAgent).getCurrentPosition()) {
-			((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
-		}
-		
-		if(posavant==((AbstractDedaleAgent)this.myAgent).getCurrentPosition()) {
-			if(!agents_pos.containsValue(nextNode)) {
-				isBlock=true;
-				exitvalue=1;
-				myTemps=new java.util.Date();
+		if(countblock==100) {
+			
+			this.myAgent.addBehaviour(new SendBlockBehaviour(this.myAgent,this.agentproche));
+			this.myAgent.addBehaviour(new AddBlockBehaviour(this.myAgent,this.myMap,this.agentproche));
+			System.out. println ("-----------\n"+this.myAgent.getLocalName()+"\t a reussit a bloquer un wumpus--------\n\n " );
+		}else {
+			if(posavant==((AbstractDedaleAgent)this.myAgent).getCurrentPosition()) {
+				((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
+			}
+
+			if(posavant==((AbstractDedaleAgent)this.myAgent).getCurrentPosition()) {
+				if(!agents_pos.containsValue(nextNode)) {//wumpus est la
+					countblock+=1;
+					isBlock=true;
+					exitvalue=1;
+					myTemps=new java.util.Date();
+					this.myAgent.addBehaviour(new SendBehaviour(myAgent, agentproche, myStench));
+					this.myAgent.addBehaviour(new ReceiveBehaviour(myAgent, agentproche, agents_pos, myStench, myTemps));
+					this.myAgent.addBehaviour(new IsTermineBehaviour(myAgent, myMap, agents_pos, myStench, myTemps, agentproche,posavant,nextNode,countblock));
+					System.out. println ( "---block---mytime "+this.myTemps+"-------stench "+this.myStench+this.myAgent.getLocalName()+" isterminebehaviour\n--------" ) ;
+				}
+			}
+			if(!isBlock) {
+				this.myAgent.addBehaviour(new ChasseBehaviour(myAgent, myMap, agents_pos, myStench, myTemps, agentproche,posavant));
 				this.myAgent.addBehaviour(new SendBehaviour(myAgent, agentproche, myStench));
 				this.myAgent.addBehaviour(new ReceiveBehaviour(myAgent, agentproche, agents_pos, myStench, myTemps));
-				this.myAgent.addBehaviour(new IsTermineBehaviour(myAgent, myMap, agents_pos, myStench, myTemps, agentproche,posavant,nextNode));
-				System.out. println ( "---block---mytime "+this.myTemps+"-------stench "+this.myStench+this.myAgent.getLocalName()+" isterminebehaviour\n--------" ) ;
+				System.out. println ( "mytime "+this.myTemps+"-------stench "+this.myStench+this.myAgent.getLocalName()+"agentproche"+this.agentproche+" isterminebehaviour\n--------" ) ;
+				
 			}
-		}
-		if(!isBlock) {
-			this.myAgent.addBehaviour(new ChasseBehaviour(myAgent, myMap, agents_pos, myStench, myTemps, agentproche,posavant));
-			this.myAgent.addBehaviour(new SendBehaviour(myAgent, agentproche, myStench));
-			this.myAgent.addBehaviour(new ReceiveBehaviour(myAgent, agentproche, agents_pos, myStench, myTemps));
-			System.out. println ( "mytime "+this.myTemps+"-------stench "+this.myStench+this.myAgent.getLocalName()+" isterminebehaviour\n--------" ) ;
-			
 		}
 	}
 	public int onEnd() {return exitvalue ;}

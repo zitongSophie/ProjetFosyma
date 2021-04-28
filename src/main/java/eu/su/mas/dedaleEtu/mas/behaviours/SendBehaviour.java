@@ -27,15 +27,10 @@ public class SendBehaviour extends OneShotBehaviour{
 	private HashMap<String,String> agents_pos=new HashMap<String,String>();
 	private HashMap<String,List<String>> myStench;
 	private List<String>agentproche;
-	private List<String> agentsNames;
 	
 	public SendBehaviour(final Agent myagent,List<String>agentproche,HashMap<String,List<String>>stench) {
 		super(myagent);
 		this.agentproche=agentproche;
-		this.agentsNames=new ArrayList<String>();
-		this.agentsNames.add("1stAgent");
-		this.agentsNames.add("2ndAgent");
-		this.agentsNames.remove(this.myAgent.getLocalName());
 		this.myStench=stench;
 	}
 	
@@ -45,7 +40,7 @@ public class SendBehaviour extends OneShotBehaviour{
 		ACLMessage msg2=new ACLMessage(ACLMessage.INFORM);
 		msg2.setSender(this.myAgent.getAID());
 		msg2.setProtocol("SEND_ODEUR");
-		for (String agentName : this.agentsNames) {
+		for (String agentName : ((ExploreCoopAgent) this.myAgent).getAgentName()) {
 			msg2.addReceiver(new AID(agentName,AID.ISLOCALNAME));
 		}
 		SMPosition contents=new SMPosition(((AbstractDedaleAgent)this.myAgent).getCurrentPosition(),lstench,new java.util.Date());
@@ -56,7 +51,7 @@ public class SendBehaviour extends OneShotBehaviour{
 			e.printStackTrace();
 		}
 		((AbstractDedaleAgent)  this.myAgent).sendMessage(msg2);
-		//System.out. println ( "-------"+contents.getDate()+"stench "+lstench+this.myStench+this.myAgent.getLocalName()+" sendbehaviour\n--------" ) ;
+		System.out. println ( "-------"+contents.getDate()+"stench "+lstench+this.myStench+this.myAgent.getLocalName()+" sendbehaviour\n--------" ) ;
 	}
 
 

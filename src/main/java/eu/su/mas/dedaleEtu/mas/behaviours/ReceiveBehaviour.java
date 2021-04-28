@@ -46,43 +46,43 @@ public class ReceiveBehaviour extends OneShotBehaviour {
 			e.printStackTrace();
 		}
 		
-		ArrayList<String>ata=new ArrayList<String>();
+		this.agentproche=new ArrayList<String>();
 		HashMap<String,Date>time=new HashMap<String,Date>();
 		
 		final MessageTemplate msgTemplate = MessageTemplate.and(
 				MessageTemplate.MatchPerformative(ACLMessage.INFORM),
 				MessageTemplate.MatchProtocol("SEND-ODEUR"));
 		ACLMessage msg = this.myAgent.receive(msgTemplate);
-		if(msg!=null) {
+		
+		while(msg!=null) {
 			System.out. println ( "mytime"+this.myTemps+"-------stench "+this.myStench+this.myAgent.getLocalName()+" receivebehaviour\n--------" ) ;
-			while(msg!=null) {
-				SMPosition smg=null;
-				try {
-					smg = ((SMPosition) msg.getContentObject());
-				} catch (UnreadableException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				//message ne pas a prendre en compte
-				if(smg.getDate().before(myTemps)) {
-					continue;
-				}
-				String agentname=msg.getSender().getLocalName();
-				if(!ata.contains(agentname)) {
-					ata.add(agentname);
-					time.put(agentname,smg.getDate());
-				}else {
-					if(time.get(agentname).before(smg.getDate())) {
-						time.put(agentname, smg.getDate());
-						this.agents_pos.put(agentname,smg.getpos());
-						this.myStench.put(agentname,smg.getPredicPosGolem());
-					}
-				}
-				msg = this.myAgent.receive(msgTemplate);
+			SMPosition smg=null;
+			try {
+				smg = ((SMPosition) msg.getContentObject());
+			} catch (UnreadableException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			this.agentproche=ata;
-			System.out. println ( "mytime"+this.myTemps+" agentproche "+this.agentproche+"-------stench "+this.myStench+this.myAgent.getLocalName()+" receivebehaviour\n--------" ) ;
+			//message ne pas a prendre en compte
+			if(smg.getDate().before(myTemps)) {
+				continue;
+			}
+			String agentname=msg.getSender().getLocalName();
+			if(!this.agentproche.contains(agentname)) {
+				this.agentproche.add(agentname);
+				time.put(agentname,smg.getDate());
+			}else {
+				if(time.get(agentname).before(smg.getDate())) {
+					time.put(agentname, smg.getDate());
+					this.agents_pos.put(agentname,smg.getpos());
+					this.myStench.put(agentname,smg.getPredicPosGolem());
+				}
+			}
+			msg = this.myAgent.receive(msgTemplate);
 		}
+		
+		System.out. println ( "mytime"+this.myTemps+" agentproche "+this.agentproche+"-------stench "+this.myStench+this.myAgent.getLocalName()+" receivebehaviour\n--------" ) ;
+	
 		
 	}
 

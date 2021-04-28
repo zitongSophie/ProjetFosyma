@@ -63,6 +63,9 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 	
 	private Integer end=0; // fin de share,ReceiveName
 	private List<String> finiExpl;
+	
+	private List<String>finiblock;
+	private boolean endblock=false;
 	//
 
 	/**
@@ -209,6 +212,12 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 	}	
 	
 	public boolean isIdenticalList (List<String> h1, List<String> h2) {
+		if(h1.isEmpty()) {
+			if(h2.isEmpty()) {
+				return true;
+			}
+			return false;
+		}
 	    if ( h1.size() != h2.size() ) {
 	        return false;
 	    }
@@ -328,7 +337,44 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 	public List<String> getFiniExpl(){
 		return this.finiExpl;
 	}
-	//--------fonction utile pour la partie chasse
+	
+	
+	//====pour la chasse
+	public void setendblock() {
+		this.endblock=true;
+	}
+	
+	public boolean getendblock() {
+		return this.endblock;
+	}
+	
+	public List<String>getfiniblock(){
+		return this.finiblock;
+	}
+	
+	public Integer setfiniblock(String name) {
+		if(this.finiExpl.contains(name)) {
+			return 0;
+		}
+		boolean nouveau=this.finiblock.add(name);
+		if(nouveau) {// set change
+			System.out.println(this.getLocalName()+" add "+ name+ " as finished");
+			if(!this.otherInfo.isEmpty()) {
+				if(this.finiblock.size()==this.otherInfo.keySet().size()) {
+					List<String> agentsNames=this.getAgentsListDF("coureur");
+					agentsNames.remove(this.getLocalName());
+					if(isIdenticalList (finiblock, agentsNames))
+						return 1; //tout le monde a fini
+				}
+			}
+		}
+		return 0;
+	}
+	
+	public void setfiniblock(List<String> lname) {
+		this.finiblock=new ArrayList<String>(lname);
+	}
+	
 	
 	public List<String> lstench(){
 		List<Couple<String,List<Couple<Observation,Integer>>>> lobs=this.observe();

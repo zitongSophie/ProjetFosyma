@@ -48,6 +48,9 @@ public class ReceiveMapBehaviour extends SimpleBehaviour {
 			this.myMap.mergeMap(sgreceived);
 			msgReceived=this.myAgent.receive(msgTemplate);
 		}
+		if(((ExploreCoopAgent) this.myAgent).getFini()==1) {
+            finished=true;
+        }
 	}
 
 	@Override
