@@ -56,14 +56,17 @@ public class MeBehaviour extends SimpleBehaviour{
 		for(AID receiver : names) {
 			msg2.addReceiver(receiver); 
 		}//4) send the message
+		
 		((AbstractDedaleAgent)  this.myAgent).sendMessage(msg2);
 		block();
 	}
 
 	@Override
 	public boolean done() {
-		// TODO Auto-generated method stub
-		return false;
+		if(finished) {
+			System.out.println(this.myAgent.getLocalName()+" remove MeBehaviour");
+		}
+		return finished;
 	}
 
 

@@ -60,7 +60,8 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 	private List<String> myAgentToShareMap; //agents to share the map
 	private List<String> myAgentToAsk;
 	private HashMap<String,String>agents_pos;
-
+	private boolean end =false;
+	private HashMap<String,String> finiExpl;
 
 /**
  * 
@@ -96,7 +97,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 		//0) Retrieve the current position
 		String myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 
-		if (myPosition!=null){
+		if (myPosition!=null && !end){
 			//List of observable from the agent's current position
 			List<Couple<String,List<Couple<Observation,Integer>>>> lobs=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
 
@@ -108,18 +109,13 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-
 			//1) remove the current node from openlist and add it to closedNodes.
 			this.myMap.addNode(myPosition, MapAttribute.closed);
 			Node nn= this.myMap.getG().getNode(myPosition);
 			for(String s : this.myInfo.keySet()) {
 				Couple<Integer,SerializableSimpleGraph<String, MapAttribute>> c;
-				//c=((ExploreCoopAgent) this.myAgent).setSgNode(s,myPosition,MapAttribute.open);
 				SerializableSimpleGraph<String,MapAttribute> updateSG;
-				
-				//updateSG=this.myMap.addNodeSG(this.myInfo.get(s).getRight(), myPosition,MapAttribute.closed);
 				updateSG=this.myInfo.get(s).getRight();
-				//System.out.println("dedans jbjbjbjbjbjb "+nn.getId());
 				updateSG.addNode(nn.getId(),MapAttribute.valueOf((String)nn.getAttribute("ui.class")));
 				c=new Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>(this.myInfo.get(s).getLeft(), updateSG);
 				this.myInfo.put(s, c);
@@ -128,9 +124,8 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 				// 1 car la carte a partage est vide puisque l'information bien d etre partage
 				newc=((ExploreCoopAgent) this.myAgent).setCouple(s,this.myInfo.get(s).getRight(),2);
 				this.myInfo.put(s, newc );
-				//System.out.println("apres moi "+this.myInfo.get(s).getRight().getNode(myPosition));
 			}
-			
+		
 			//2) get the surrounding nodes and, if not in closedNodes, add them to open nodes.
 			String nextNode=null;
 			Iterator<Couple<String, List<Couple<Observation, Integer>>>> iter=lobs.iterator();
@@ -164,6 +159,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 			
 			//3) while openNodes is not empty, continues.
 			if (!this.myMap.hasOpenNode()){
+				end=true; // fin de l'explo mais attendre que tout le monde a fini
 				//Explo finished
 				finished=true;
 				System.out.println(this.myAgent.getLocalName()+"\t"+myPosition+" \n\n\n- Exploration successufully done, behaviour removed.\n\n\n");
@@ -173,19 +169,11 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 				//4.1 If there exist one open node directly reachable, go for it,
 				//	 otherwise choose one from the openNode list, compute the shortestPath and go for it
 				if (nextNode==null){
-					
-					//changer ce ligne
-					nextNode=this.myMap.getNextNode(myPosition,this.agents_pos,this.myAgentToShareMap,lobs);//getShortestPath(myPosition,this.openNodes.get(0)).get(0);
-					
-//					System.out.println("\n"+this.myAgent.getLocalName()+"-- list= "+this.myMap.getOpenNodes()+"| nextNode: "+nextNode+"\n");
-					
-					//System.out.println("normal iteration"+this.myMap.getNextNode(myPosition, this.agents_pos));
+					nextNode=this.myMap.getNextNode(myPosition,this.agents_pos,this.myAgentToShareMap,lobs);
 				}else {
 					//System.out.println("nextNode notNUll - "+this.myAgent.getLocalName()+"-- list= "+this.myMap.getOpenNodes()+"\n -- nextNode: "+nextNode);
 				}
 
-
-				
 				ACLMessage msg=new ACLMessage(ACLMessage.INFORM);
 				msg.setSender(this.myAgent.getAID());
 				msg.setProtocol("WHO_IS_HERE_PROTOCOL");
@@ -199,60 +187,20 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 				((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
 			}
 		}
-	}
 
+	}
 
 
 	@Override
 	public boolean done() {
-		//System.out.println(this.myAgent.getLocalName()+ " enregistre comme finiExplo");
 		if(finished) {
-			//deregister
-			DFAgentDescription dfd = new DFAgentDescription();
-			this.myAgent.getDefaultDF().setName(((AbstractDedaleAgent)this.myAgent).getAID().getLocalName()); 
-			// The agent AID
-			ServiceDescription sd = new ServiceDescription () ;
-			sd.setType( "courreur" ); // You have to give a
-			sd.setName(((AbstractDedaleAgent)this.myAgent).getLocalName());//(local)name of
-			dfd.addServices(sd);
-			//Register the service
-
-			try {
-				DFService.deregister( ((AbstractDedaleAgent)this.myAgent), dfd );
-				System.out. println ( "------- supprime agent courreur"+this.myAgent.getLocalName()+" \n--------" ) ;
-			} catch (FIPAException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			//register
-			DFAgentDescription dfd2 = new DFAgentDescription();
-			this.myAgent.getDefaultDF().setName(((AbstractDedaleAgent)this.myAgent).getAID().getLocalName()); 
-			// The agent AID
-			ServiceDescription sd2 = new ServiceDescription () ;
-			sd2.setType("finiExplo"); // You have to give a
-			sd2.setName(((AbstractDedaleAgent)this.myAgent).getLocalName());//(local)name of
-			dfd2.addServices(sd2);
-			//Register the service
-			DFAgentDescription result;
-			try {
-				result = DFService.register( this.myAgent , dfd2 );
-				System.out. println ( "-------inscription finiExplo---"+this.myAgent.getLocalName()+" \n--------" ) ;
-			} catch (FIPAException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			List<String> finiExpl=((ExploreCoopAgent) this.myAgent).getAgentsListDF("finiExplo") ;
-			if(finiExpl.isEmpty()) {
-				System.out.println("finiExpl est vide");
-			}
-			else {
-				for(String s : finiExpl) {
-					System.out.println("finiExpl contient "+s);
-				}
-			}
+			//s'ajouter comme fini
+			((ExploreCoopAgent) this.myAgent).setFini(this.myAgent.getLocalName());
+			this.myAgent.addBehaviour(new SendEndBehaviour(this.myAgent,this.myAgentToAsk));
+			this.myAgent.addBehaviour(new MoveTestBehaviour(this.myAgent,this.myMap));
+			this.myAgent.addBehaviour(new AddEndBehaviour(this.myAgent,this.myMap,this.myAgentToAsk));
+			System.out.println(this.myAgent.getLocalName()+" remove ExploCoopBehaviour");
 		}
-
 		return finished;
 	}
 	

@@ -25,6 +25,7 @@ import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import dataStructures.tuple.Couple;
@@ -58,6 +59,9 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 	private List<String> agentToShareMap; //agents to share the map
 	private List<String> agentToAsk;
 	private Date temps=new java.util.Date();
+	
+	private Integer end=0; // fin de share,ReceiveName
+	private List<String> finiExpl;
 	//
 
 	/**
@@ -72,7 +76,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		super.setup();
 		
 		final Object[] args = getArguments();
-		
+		finiExpl=new ArrayList<String>();
 		//List<String> list_agentNames=new ArrayList<String>();
 /*add*/	HashMap<String,String> agents_pos=new HashMap<String,String>();
 		
@@ -100,13 +104,14 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		for(String s: agentsNames) {
 			agents_pos.put(s,(String)"-1");
 			
-			System.out.println("nom des agents "+s);
+			System.out.println(this.getLocalName()+"nom des agents "+s);
 			//SerializableSimpleGraph<String, MapAttribute> sg=this.myMap.getSerializableGraph();
 			Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>c;
 			//0 : vus 0 fois,  1 vide et viens d echanger info   2: graphes non vide
 			c=new Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>(0, new SerializableSimpleGraph<String,MapAttribute>());
 			this.otherInfo.put(s,c);
-		}// demander aux agents ou on a des choses a envoyer
+		}
+		// demander aux agents ou on a des choses a envoyer
 		this.agentToAsk=new ArrayList<String>();
 		for (String s :this.otherInfo.keySet()) {
 			if(this.otherInfo.get(s).getLeft()==0) {
@@ -202,7 +207,27 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		return whoAsk;
 	}	
 	
+	public boolean isIdenticalList (List<String> h1, List<String> h2) {
+	    if ( h1.size() != h2.size() ) {
+	        return false;
+	    }
+	    List<String> clone = new ArrayList<String>(h2); 
+
+	    Iterator<String> it = h1.iterator();
+	    while (it.hasNext() ){
+	        String A = it.next();
+	        if (clone.contains(A)){ 
+	            clone.remove(A);
+	        } else {
+	            return false;
+	        }
+	    }
+	    return true; //will only return true if sets are equal
+	}	
+
 	public boolean isIdenticalList (Set<String> h1, List<String> h2) {
+		System.out.println(h1.toString());
+		System.out.println(h2.toString());
 	    if ( h1.size() != h2.size() ) {
 	        return false;
 	    }
@@ -221,7 +246,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 	    return true; //will only return true if sets are equal
 	}	
 	
-	public Set<String> getAgentName() {
+	public Set<String> getAgentName() {//sans le nom de l agent this
 		return this.otherInfo.keySet();
 	}
 	
@@ -265,5 +290,43 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		}
 
 	}
+	
+	public Integer setFini(String name) {
+		if(this.finiExpl.contains(name)) {
+			return 0;
+		}
+		boolean nouveau=this.finiExpl.add(name);
+		if(nouveau) {// set change
+			System.out.println(this.getLocalName()+" add "+ name+ " as finished");
+			if(!this.otherInfo.isEmpty()) {
+				if(this.finiExpl.size()==this.otherInfo.keySet().size()) {
+					List<String> agentsNames=this.getAgentsListDF("coureur");
+					agentsNames.remove(this.getLocalName());
+					if(isIdenticalList (finiExpl, agentsNames))
+						return 1; //tout le monde a fini
+				}
+			}
+		}
+		return 0;
+	}
+	
+	public void setFini(List<String> lname) {
+		this.finiExpl=new ArrayList<String>(lname);
+	}
+	
+	public void setEnd() {
+		this.end=1;
+	}
+
+	public Integer getFini() {
+		return this.end;
+	}
+	
+
+	
+	public List<String> getFiniExpl(){
+		return this.finiExpl;
+	}
+		
 
 }
