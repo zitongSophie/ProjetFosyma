@@ -217,6 +217,10 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 				return true;
 			}
 			return false;
+		}else {
+			if(h2.isEmpty()) {
+				return false;
+			}
 		}
 	    if ( h1.size() != h2.size() ) {
 	        return false;

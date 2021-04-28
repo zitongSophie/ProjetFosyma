@@ -103,20 +103,40 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 		for(String s:this.myAgentToShareMap) {
 			agentproche.add(this.agents_pos.get(s));
 		}
-		if(posavant==myPosition && !agentproche.contains(nextnodeblock)) {
-			count+=1;
-			if(count==100) {
-				finished=true;
-				((ExploreCoopAgent) this.myAgent).setEnd();
-				System.out.println(this.myAgent.getLocalName()+"\t"+myPosition+" \n\n\n- block wumpus before finished explore.\n\n\n");
-			}else {
+		if(posavant==myPosition && agentproche.contains(nextnodeblock)) {
+			
+			
+			ACLMessage msg=new ACLMessage(ACLMessage.INFORM);
+			msg.setSender(this.myAgent.getAID());
+			msg.setProtocol("WHO_IS_HERE_PROTOCOL");
+			msg.setContent(myPosition);
+			for (String agentName : this.myAgentToAsk) {
+				msg.addReceiver(new AID(agentName,AID.ISLOCALNAME));
+			}
+			((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
+			
+			
 			((AbstractDedaleAgent)this.myAgent).moveTo(nextnodeblock);
+			boolean isblock=true;
+			for( String s:this.myMap.getnodeAdjacent(nextnodeblock)) {
+				if(!agentproche.contains(s)) {
+					isblock=false;
+					break;
+				}
+			}
+			
+			if(isblock) {
+				((ExploreCoopAgent) this.myAgent).setEnd();
+				this.myAgent.addBehaviour(new SendBlockBehaviour(myAgent, agentproche));
+				this.myAgent.addBehaviour(new AddBlockBehaviour(myAgent, myMap, agentproche));
+				System.out.println(this.myAgent.getLocalName()+"\t"+myPosition+" \n\n\n- block wumpus before finished explore.\n\n\n");
+				finished=true;
 			}
 		}else {
 			if (myPosition!=null){
 				//List of observable from the agent's current position
 				List<Couple<String,List<Couple<Observation,Integer>>>> lobs=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
-
+	
 				/**
 				 * Just added here to let you see what the agent is doing, otherwise he will be too quick
 				 */
@@ -188,7 +208,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 					}else {
 						//System.out.println("nextNode notNUll - "+this.myAgent.getLocalName()+"-- list= "+this.myMap.getOpenNodes()+"\n -- nextNode: "+nextNode);
 					}
-
+	
 					ACLMessage msg=new ACLMessage(ACLMessage.INFORM);
 					msg.setSender(this.myAgent.getAID());
 					msg.setProtocol("WHO_IS_HERE_PROTOCOL");
