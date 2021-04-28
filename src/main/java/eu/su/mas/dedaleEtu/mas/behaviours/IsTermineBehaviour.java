@@ -34,7 +34,7 @@ public class IsTermineBehaviour extends OneShotBehaviour {
 	private HashMap<String,List<String>> myStench;
 	private Date myTemps;
 	private List<String> agentproche;
-	private int exitvalue=2;
+	private int exitvalue=1;
 	private String posavant;
 	private String nextNode;
 	private int countblock;

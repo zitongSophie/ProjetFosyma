@@ -256,13 +256,11 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 				fsm.registerState (new ReceiveBehaviour(myAgent, agentproche, agents_pos, myStench, tps), r);
 				fsm.registerState (new SendBehaviour(myAgent, agentproche, myStench), s); // Register the transitions
 				fsm.registerLastState(new IsTermineBehaviour(myAgent, myMap, agents_pos, myStench, tps, agentproche,posavant,posavant,0),t);
-				//fsm.registerDefaultTransition (c,s);//Default 
+				fsm.registerDefaultTransition (c,s);//Default 
 				fsm.registerDefaultTransition (s,r);//Default 
 				fsm.registerDefaultTransition (r,t);
-				fsm. registerTransition (c,t, 1);//Cond 2 
-				fsm. registerTransition (c,s, 2);//Cond 1 
 				fsm. registerTransition (t,s, 2);//Cond 1 
-				fsm. registerTransition (t,s, 1);//Cond 1 
+				fsm. registerTransition (t,c, 1);//Cond 1 
 				this.myAgent.addBehaviour(fsm);
 			}
 		}

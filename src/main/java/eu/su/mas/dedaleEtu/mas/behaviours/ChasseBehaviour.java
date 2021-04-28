@@ -125,9 +125,6 @@ public class ChasseBehaviour extends OneShotBehaviour {
 		
 
 
-	@Override
-	public int onEnd() {return exitvalue ;}
-	
 	
 
 }
