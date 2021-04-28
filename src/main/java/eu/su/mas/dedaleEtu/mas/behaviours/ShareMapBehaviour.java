@@ -105,16 +105,8 @@ public class ShareMapBehaviour extends SimpleBehaviour{
 		}
 
 
-		List<String> finiExpl=((ExploreCoopAgent) this.myAgent).getAgentsListDF("finiExplo") ;
-		if(!finiExpl.isEmpty()) {
-			if(finiExpl.contains(this.getAgent().getLocalName())) {
-				finiExpl.remove(this.myAgent.getLocalName());
-				if(!finiExpl.isEmpty()) {
-					if(((ExploreCoopAgent) this.myAgent).isIdenticalList (this.agentsInfo.keySet(),finiExpl )){
-						this.finished=true;
-					}	
-				}
-			}
+		if(((ExploreCoopAgent) this.myAgent).getFini()==1) {
+			finished=true;
 		}
 	}
 
@@ -122,7 +114,7 @@ public class ShareMapBehaviour extends SimpleBehaviour{
 	public boolean done() {
 		if(finished) {
 			System.out.println("ShareMapBehaviour is finished of "+this.myAgent.getLocalName());
-			this.myAgent.addBehaviour(new FindGolemBehaviour((AbstractDedaleAgent) this.myAgent,this.myMap));
+			//this.myAgent.addBehaviour(new FindGolemBehaviour((AbstractDedaleAgent) this.myAgent,this.myMap));
 		}
 		return finished;
 	}

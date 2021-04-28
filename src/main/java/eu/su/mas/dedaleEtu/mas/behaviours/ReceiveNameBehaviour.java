@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
+import eu.su.mas.dedaleEtu.mas.agents.dummies.explo.ExploreCoopAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.SMPosition;
 import jade.core.AID;
 //import jade.core.AID;
@@ -14,7 +15,7 @@ import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
-public class ReceiveNameBehaviour extends OneShotBehaviour {
+public class ReceiveNameBehaviour extends SimpleBehaviour {
 	private static final long serialVersionUID = -8577400242202965285L;
 	private boolean finished= false;
 	private List<String> agentsToContact;
@@ -68,6 +69,18 @@ public class ReceiveNameBehaviour extends OneShotBehaviour {
 		}
 		//4) send the message
 		((AbstractDedaleAgent)  this.myAgent).sendMessage(msg2);
+		
+		if(((ExploreCoopAgent) this.myAgent).getFini()==1) {
+			finished=true;
+		}
+	}
+
+	@Override
+	public boolean done() {
+		if(finished) {
+			System.out.println(this.myAgent.getLocalName()+" remove ReceiveNameBehaviour");
+		}
+		return finished;
 	}
 
 
