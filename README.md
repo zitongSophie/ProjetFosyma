@@ -11,7 +11,7 @@
  - Semaine 10 (3 mai):    Soutenances
 
 
-## travail au courant:
+## travail en cours:
  implémenter la chasse et le blocage d'un adversaire. Réfléchir à  : 
  
  --> L'impact de la topologie sur la chasse
