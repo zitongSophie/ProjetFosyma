@@ -43,6 +43,7 @@ public class ReceiveNameBehaviour extends SimpleBehaviour {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		this.agentsToContact=new ArrayList<String>();
 		final MessageTemplate msgTemplate = MessageTemplate.and(
 				MessageTemplate.MatchPerformative(ACLMessage.INFORM),
 				MessageTemplate.MatchProtocol("ME_PROTOCOL"));
