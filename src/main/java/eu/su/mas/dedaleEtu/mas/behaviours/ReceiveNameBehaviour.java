@@ -48,32 +48,40 @@ public class ReceiveNameBehaviour extends SimpleBehaviour {
 				MessageTemplate.MatchPerformative(ACLMessage.INFORM),
 				MessageTemplate.MatchProtocol("ME_PROTOCOL"));
 		ACLMessage msg = this.myAgent.receive(msgTemplate);
-		while(msg!=null) {
+		if(msg!=null) {
 			System.out.println(this.myAgent.getLocalName()+"<----Value received from "+msg.getSender().getLocalName());
-			//String sender=msg.getContent();
-			this.agentsToContact.add(msg.getSender().getLocalName());	//get all the agents who is here
-			msg = this.myAgent.receive(msgTemplate);
-			this.posAgentReceived.add(msg.getContent());
+			while(msg!=null) {
+				
+				//String sender=msg.getContent();
+				this.agentsToContact.add(msg.getSender().getLocalName());	//get all the agents who is here
+
+				this.posAgentReceived.add(msg.getContent());
+				msg = this.myAgent.receive(msgTemplate);
+
+			}
+			final ACLMessage msg2 = new ACLMessage(ACLMessage.REQUEST);
+			msg2.setProtocol("SHARE");
+					//2) Set the sender and the receiver(s)
+			msg2.setSender(this.myAgent.getAID());
+			msg2.addReceiver(this.myAgent.getAID());
+			// UTILE POUR LA CHASSE, obtenir les positions des autres qui sont a cote de l agent
+			SMPosition smsg=new SMPosition(((AbstractDedaleAgent) this.myAgent).getCurrentPosition(),this.posAgentReceived,null);
+			try {					
+				msg2.setContentObject(smsg);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			//4) send the message
+			((AbstractDedaleAgent)  this.myAgent).sendMessage(msg2);
+			
+			if(((ExploreCoopAgent) this.myAgent).getFini()==1) {
+				finished=true;
+			}
+		}else {
+			block();
 		}
 		
-		final ACLMessage msg2 = new ACLMessage(ACLMessage.REQUEST);
-		msg2.setProtocol("SHARE");
-				//2) Set the sender and the receiver(s)
-		msg2.setSender(this.myAgent.getAID());
-		msg2.addReceiver(this.myAgent.getAID());
-		// UTILE POUR LA CHASSE, obtenir les positions des autres qui sont a cote de l agent
-		SMPosition smsg=new SMPosition(((AbstractDedaleAgent) this.myAgent).getCurrentPosition(),this.posAgentReceived,null);
-		try {					
-			msg2.setContentObject(smsg);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		//4) send the message
-		((AbstractDedaleAgent)  this.myAgent).sendMessage(msg2);
 		
-		if(((ExploreCoopAgent) this.myAgent).getFini()==1) {
-			finished=true;
-		}
 	}
 
 	@Override

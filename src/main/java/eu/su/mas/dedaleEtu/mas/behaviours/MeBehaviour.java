@@ -30,7 +30,7 @@ public class MeBehaviour extends SimpleBehaviour{
 	
 	@Override
 	public void action() {
-		//System.out.println("MeBehaviour");
+		
 		//1) receive the SendWhoIsHere message
 		try {
 			this.myAgent.doWait(100);
@@ -41,6 +41,11 @@ public class MeBehaviour extends SimpleBehaviour{
 				MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
 				MessageTemplate.MatchProtocol("WHO_IS_HERE_PROTOCOL"));	
 		ACLMessage msg = this.myAgent.receive(msgTemplate);
+		if(msg!=null) {
+			System.out.println("SendMessage behaviour from agent: "+ msg.getSender().getLocalName()+msg.getContent());
+		}else {
+			block();
+		}
 		while(msg != null) {
 			this.agents_pos.put(msg.getSender().getLocalName(), msg.getContent());
 				
@@ -56,9 +61,10 @@ public class MeBehaviour extends SimpleBehaviour{
 		for(AID receiver : names) {
 			msg2.addReceiver(receiver); 
 		}//4) send the message
-		
+		String pos=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
+		System.out.println(pos);
+		msg2.setContent(pos);
 		((AbstractDedaleAgent)  this.myAgent).sendMessage(msg2);
-		block();
 	}
 
 	@Override
