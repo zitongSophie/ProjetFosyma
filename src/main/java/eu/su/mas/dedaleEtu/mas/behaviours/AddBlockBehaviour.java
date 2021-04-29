@@ -18,6 +18,7 @@ import eu.su.mas.dedaleEtu.mas.knowledge.SMPosition;
 import eu.su.mas.dedaleEtu.mas.knowledge.SerializableMessage;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
@@ -32,13 +33,11 @@ import jade.lang.acl.UnreadableException;
  * @author hc
  *
  */
-public class AddBlockBehaviour extends SimpleBehaviour{
+public class AddBlockBehaviour extends OneShotBehaviour{
 	
 	private MapRepresentation myMap;
-	private List<String> listReceivers;
-	private HashMap<String,Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>>  agentsInfo;
-	private boolean finished=false;
 	private List<String> Cg;
+	private int exitvalue=1;//0:j'ai pas fini: entre dans ce state seulement quand moi meme est fini,mais pas fini pour tout le monde;tous le monde est fini:2
 
 	/**
 	 * The agent periodically share its map.
@@ -50,10 +49,9 @@ public class AddBlockBehaviour extends SimpleBehaviour{
 	 * @param mymap (the map to share)
 	 * @param receivers the list of agents to send the map to
 	 */
-	public AddBlockBehaviour(Agent a,MapRepresentation mymap, List<String> receivers) {
+	public AddBlockBehaviour(Agent a,MapRepresentation mymap) {
 		super(a);
 		this.myMap=mymap;
-		this.listReceivers=receivers;	
 		this.Cg=new ArrayList<String>();
 	}
 
@@ -98,26 +96,20 @@ public class AddBlockBehaviour extends SimpleBehaviour{
 				if(!Cg.contains(this.myAgent.getLocalName())) {
 					this.Cg.add(this.myAgent.getLocalName());
 					((ExploreCoopAgent) this.myAgent).setfiniblock(sgreceived.getListFini());
-					System.out.println(this.myAgent.getLocalName()+" knew everything now "+((ExploreCoopAgent) this.myAgent).getFiniExpl().toString());
+					System.out.println(this.myAgent.getLocalName()+" knew block now "+((ExploreCoopAgent) this.myAgent).getFiniExpl().toString());
 				}
 				if(((ExploreCoopAgent) this.myAgent).isIdenticalList(((ExploreCoopAgent) this.myAgent).getAgentsListDF("coureur"),this.Cg)) {// tout le monde sait que tout le monde a fini
-					System.out.println("------------------------------------\n"+this.myAgent.getLocalName()+" knew everything now "+((ExploreCoopAgent) this.myAgent).getFiniExpl().toString());
-					finished=true;
+					System.out.println("------------------------------------\n"+this.myAgent.getLocalName()+" knew block now "+((ExploreCoopAgent) this.myAgent).getFiniExpl().toString());
+					exitvalue=2;
 				}
 				
 			}
 			msg = this.myAgent.receive(msgT);
 		}
 	}
+	public int onEnd() {return exitvalue ;}
 	
-	@Override
-	public boolean done() {
-		if(finished) {
-			((ExploreCoopAgent) this.myAgent).setendblock();
-			System.out.println(this.myAgent.getLocalName()+" remove AddEndBehaviour");
-		}
-		return finished;
-	}
+
 
 
 
