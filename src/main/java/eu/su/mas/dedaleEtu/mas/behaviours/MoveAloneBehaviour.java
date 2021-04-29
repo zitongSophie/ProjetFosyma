@@ -1,6 +1,5 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -23,7 +22,7 @@ import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 
-public class ChasseBehaviour extends OneShotBehaviour {
+public class MoveAloneBehaviour extends OneShotBehaviour {
 	private static final long serialVersionUID = 8567689731496787661L;
 
 
@@ -31,35 +30,28 @@ public class ChasseBehaviour extends OneShotBehaviour {
 	 * Current knowledge of the agent regarding the environment
 	 */
 	private MapRepresentation myMap;
-	private HashMap<String,String>agents_pos;
-	private HashMap<String,List<String>> myStench;
-	private String posavant="-1";
 	private Date myTemps;
-	private List<String> agentproche;
-	private int exitvalue=2;
+	private List<String> pos_avant_next;
 	/**
 	 * 
 	 * @param myagent
 	 * @param myMap known map of the world the agent is living in
 	 * @param agentNames name of the agents to share the map with
 	 */																												//add attribute
-		public ChasseBehaviour(final Agent myagent, MapRepresentation myMap,HashMap<String,String> pos,HashMap<String,List<String>> myStench,Date tps,List<String>ata,String posavant) {
+		public MoveAloneBehaviour(final Agent myagent, MapRepresentation myMap,Date tps,List<String>pos_avant_next) {
 			super(myagent);
-			this.myMap=myMap;
-			this.myStench=myStench;	
+			this.myMap=myMap;	
 			this.myAgent=myagent;
-			this.agents_pos=pos;
 			this.myTemps=tps;
-			this.agentproche=ata;
-			this.posavant=posavant;
-			
+			this.pos_avant_next=pos_avant_next;
 		}
 
 	@Override
 	public void action() {
 		//0) Retrieve the current position
 		String myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
-
+		String posavant=this.pos_avant_next.get(0);
+		String nextNode=this.pos_avant_next.get(1);
 		if (myPosition!=null){
 			//List of observable from the agent's current position
 			/**
@@ -70,6 +62,7 @@ public class ChasseBehaviour extends OneShotBehaviour {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+			
 			//cas normale :chercher aleatoire dans le map
 			List<String>caseproche=this.myMap.getnodeAdjacent(myPosition) ;
 			caseproche.remove(posavant);
@@ -78,47 +71,25 @@ public class ChasseBehaviour extends OneShotBehaviour {
 			}
 			Integer r=(int)( Math.random() *  caseproche.size()  );
 			
-			String nextNode=caseproche.get(r);
+			nextNode=caseproche.get(r);
 			//mettre a jour l'odeurs obseve
 			List<String>lstench=((ExploreCoopAgent) this.myAgent).lstench();
 			
 			//pas d'agent en communication.suive l'odeur
 			lstench.remove(myPosition);
+			lstench.remove(posavant);
 			if(!lstench.isEmpty()) {
 				nextNode=lstench.get(0);
 			}
 			
-			//agent en communication
-			if(!this.myStench.isEmpty()) {
-				this.myStench.put(this.myAgent.getLocalName(), lstench);
-				HashMap<String, Integer> count=new HashMap<String, Integer>();
-				for (List<String>listpos:myStench.values()) {
-					for (String pos:listpos) {
-						if(count.containsKey(pos)) {
-							count.put(pos, count.get(pos)+1);
-						}else {
-							count.put(pos, 1);
-						}
-					}
-				}
-				String pos = myPosition;
-				int i=0;
-				for (String key:count.keySet()) {
-					if(count.get(key)>i) {
-						pos=key;
-						i=count.get(key);
-					}
-				}
-				caseproche=this.myMap.getnodeAdjacent(pos) ;
-				r=(int)( Math.random() *  caseproche.size()  );
-				nextNode=this.myMap.getShortestPath(myPosition, caseproche.get(r)).get(0);
-				System.out. println ( "-------mytime"+this.myTemps+"stench "+lstench+this.myAgent.getLocalName()+" next move"+nextNode+"agentname\n--------" ) ;
-			}
-			System.out. println ( "----mytime "+this.myTemps+" agentproche "+this.agentproche+" stench "+lstench+this.myStench+this.myAgent.getLocalName()+" next move"+nextNode+"agentname chassebehaviour\n--------" ) ;
-			myTemps=new java.util.Date();
-			this.posavant=myPosition;
+			
+			posavant=myPosition;
+			this.pos_avant_next.add(0, posavant);
+			this.pos_avant_next.add(1, nextNode);
 			((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
-			this.myAgent.addBehaviour(new IsTermineBehaviour(myAgent, myMap, agents_pos, myStench, myTemps, agentproche,posavant,nextNode,0));
+			((ExploreCoopAgent) this.myAgent).setmyTemps();
+			System.out. println ( "----mytime "+this.myTemps+" stench "+lstench+this.myAgent.getLocalName()+"current pos"+((AbstractDedaleAgent)this.myAgent).getCurrentPosition()+"next move"+nextNode+"agentname chassebehaviour\n--------" ) ;
+			
 		}
 		
 	}
