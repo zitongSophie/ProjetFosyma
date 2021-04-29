@@ -59,7 +59,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 	private HashMap<String,Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>> otherInfo;
 	private List<String> agentToShareMap; //agents to share the map
 	private List<String> agentToAsk;
-	private Date temps=new java.util.Date();
+	private Date myTemps=new java.util.Date();
 	
 	private Integer end=0; // fin de share,ReceiveName
 	private List<String> finiExpl;
@@ -274,7 +274,6 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		sd.setName(this.getLocalName());//(local)name of
 		dfd.addServices(sd);
 		//Register the service
-
 		DFAgentDescription result;
 		try {
 			result = DFService.register( this , dfd );
@@ -294,10 +293,9 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		sd.setName(this.getLocalName());//(local)name of
 		dfd.addServices(sd);
 		//Register the service
-
 		try {
 			DFService.deregister( this, dfd );
-			System.out. println ( "------- supprime agent courreur"+this.getLocalName()+" \n--------" ) ;
+			System.out. println ( "------- supprime agent coureur"+this.getLocalName()+" \n--------" ) ;
 		} catch (FIPAException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -395,7 +393,16 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		}
 		return lstench;
 	}
-
-		
+	
+	public void setmyTemps() {
+        this.myTemps=new java.util.Date();
+    }
+    public Date getmyTemps() {
+        return this.myTemps;
+    }
+    
+	public List<String> getNodeAdjacent(String node){
+		return this.myMap.getnodeAdjacent(node);
+	}
 
 }
