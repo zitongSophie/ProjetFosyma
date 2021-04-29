@@ -1,5 +1,6 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -12,12 +13,15 @@ import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.agents.dummies.explo.ExploreCoopAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
+import eu.su.mas.dedaleEtu.mas.knowledge.SMPosition;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
 
 public class IsTermineBehaviour extends OneShotBehaviour {
 
@@ -27,69 +31,103 @@ public class IsTermineBehaviour extends OneShotBehaviour {
 	private static final long serialVersionUID = -7158228049276029011L;
 	
 	
-	private boolean isBlock=false;
-	
 	private MapRepresentation myMap;
 	private HashMap<String,String>agents_pos;
 	private HashMap<String,List<String>> myStench;
-	private Date myTemps;
-	private List<String> agentproche;
-	private int exitvalue=1;
-	private String posavant;
-	private String nextNode;
-	private int countblock;
+	private int exitvalue=1;					//1:continue;
+												//2:fini chasse solo fsm(fini block ou passer chasse together fsm)
+	
+	private List<String>pos_avant_next;
 	/**
 	 * 
 	 * @param myagent
 	 * @param myMap known map of the world the agent is living in
 	 * @param agentNames name of the agents to share the map with
 	 */																												//add attribute
-	public IsTermineBehaviour(final Agent myagent, MapRepresentation myMap,HashMap<String,String> pos,HashMap<String,List<String>> myStench,Date tps,List<String>ata,String posavant,String nextNode,int countblock ) {
+	public IsTermineBehaviour(final Agent myagent, MapRepresentation myMap,HashMap<String,String> pos,HashMap<String,List<String>> myStench,List<String>pos_avant_next) {
 		super(myagent);
 		this.myMap=myMap;
 		this.myStench=myStench;	
 		this.myAgent=myagent;
 		this.agents_pos=pos;
-		this.myTemps=tps;
-		this.agentproche=ata;
-		this.posavant=posavant;
-		this.nextNode=nextNode;
-		this.countblock=countblock;
+		this.pos_avant_next=pos_avant_next;
 		
 	}
 
 	@Override
 	public void action() {
-		if(countblock==100) {
-			
-			this.myAgent.addBehaviour(new SendBlockBehaviour(this.myAgent,this.agentproche));
-			this.myAgent.addBehaviour(new AddBlockBehaviour(this.myAgent,this.myMap,this.agentproche));
-			System.out. println ("-----------\n"+this.myAgent.getLocalName()+"\t a reussit a bloquer un wumpus--------\n\n " );
-		}else {
-			if(posavant==((AbstractDedaleAgent)this.myAgent).getCurrentPosition()) {
-				((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
+		
+		HashMap<String,Date>time=new HashMap<String,Date>();
+		final MessageTemplate msgTemplate = MessageTemplate.and(
+				MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+				MessageTemplate.MatchProtocol("SEND_ODEUR"));
+		ACLMessage msg = this.myAgent.receive(msgTemplate);
+		if(msg!=null) {
+			exitvalue=2;
+			while(msg!=null) {
+				SMPosition smg=null;
+				try {
+					smg = ((SMPosition) msg.getContentObject());
+				} catch (UnreadableException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				//message ne pas a prendre en compte
+				if(smg.getDate().before(((ExploreCoopAgent) this.myAgent).getmyTemps())) {
+					continue;
+				}
+				String agentname=msg.getSender().getLocalName();
+				if(!time.containsKey(agentname)) {
+					time.put(agentname,smg.getDate());
+				}else {
+					if(time.get(agentname).before(smg.getDate())) {
+						time.put(agentname, smg.getDate());
+						this.agents_pos.put(agentname,smg.getpos());
+						this.myStench.put(agentname,smg.getPredicPosGolem());
+					}
+				}
+				msg = this.myAgent.receive(msgTemplate);
 			}
-
-			if(posavant==((AbstractDedaleAgent)this.myAgent).getCurrentPosition()) {
-				if(!agents_pos.containsValue(nextNode)) {//wumpus est la
-					countblock+=1;
-					isBlock=true;
-					exitvalue=1;
-					myTemps=new java.util.Date();
-					this.myAgent.addBehaviour(new SendBehaviour(myAgent, agentproche, myStench));
-					this.myAgent.addBehaviour(new ReceiveBehaviour(myAgent, agentproche, agents_pos, myStench, myTemps));
-					this.myAgent.addBehaviour(new IsTermineBehaviour(myAgent, myMap, agents_pos, myStench, myTemps, agentproche,posavant,nextNode,countblock));
-					System.out. println ( "---block---mytime "+this.myTemps+"-------stench "+this.myStench+this.myAgent.getLocalName()+" isterminebehaviour\n--------" ) ;
+			System.out.println("MoveAloneBehaviour termine car communication");
+			//a completer lancer movetogather
+			
+			
+		}else {
+			String posavant=this.pos_avant_next.get(0);
+			String nextNode=this.pos_avant_next.get(1);
+			
+			if(posavant.equals(((AbstractDedaleAgent)this.myAgent).getCurrentPosition())) {
+				if(!((AbstractDedaleAgent)this.myAgent).moveTo(nextNode)) {
+					
+					//il y a wumpus
+					ACLMessage msg2=new ACLMessage(ACLMessage.INFORM);
+					msg2.setSender(this.myAgent.getAID());
+					msg2.setProtocol("WUMPUS_IS_HERE_PROTOCOL");
+					
+					SMPosition contents=new SMPosition(nextNode,null,new java.util.Date());
+					try {
+						msg2.setContentObject(contents);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					for (String agentName : ((ExploreCoopAgent) this.myAgent).getAgentName()) {
+						msg2.addReceiver(new AID(agentName,AID.ISLOCALNAME));
+					}
+					((AbstractDedaleAgent)this.myAgent).sendMessage(msg2);
+					if(this.myMap.getnodeAdjacent(nextNode).size()==1){
+						exitvalue=2;
+						System.out.println("MoveAloneBehaviour termine car block wumpus");
+						
+					}
+					
 				}
 			}
-			if(!isBlock) {
-				this.myAgent.addBehaviour(new ChasseBehaviour(myAgent, myMap, agents_pos, myStench, myTemps, agentproche,posavant));
-				this.myAgent.addBehaviour(new SendBehaviour(myAgent, agentproche, myStench));
-				this.myAgent.addBehaviour(new ReceiveBehaviour(myAgent, agentproche, agents_pos, myStench, myTemps));
-				System.out. println ( "mytime "+this.myTemps+"-------stench "+this.myStench+this.myAgent.getLocalName()+"agentproche"+this.agentproche+" isterminebehaviour\n--------" ) ;
-				
-			}
+			System.out. println ( "----mytime "+((ExploreCoopAgent) this.myAgent).getmyTemps()+this.myAgent.getLocalName()+"pos avant"+posavant+"current pos"+((AbstractDedaleAgent)this.myAgent).getCurrentPosition()+"next move"+nextNode+"agentname ISTERMINEbehaviour\n--------" ) ;
 		}
+		
+		
 	}
 	public int onEnd() {return exitvalue ;}
 
