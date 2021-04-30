@@ -12,10 +12,12 @@ import eu.su.mas.dedaleEtu.mas.behaviours.ExploCoopBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.MeBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ReceiveMapBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ReceiveNameBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.SendWhoIsHereBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.behaviours.ShareMapBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
 import jade.core.AID;
+import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.domain.AMSService;
 import jade.domain.DFService;
@@ -131,7 +133,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		 ************************************************/
 		
 		lb.add(new ExploCoopBehaviour(this,this.myMap,this.otherInfo,this.agentToAsk,this.agentToShareMap,agents_pos));
-
+		lb.add(new SendWhoIsHereBehaviour(this,this.agentToAsk));
 		
 		
 		/***
@@ -402,6 +404,9 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
     }
     
 	public List<String> getNodeAdjacent(String node){
+		if(this.myMap==null) {
+			return null;
+		}
 		return this.myMap.getnodeAdjacent(node);
 	}
 
