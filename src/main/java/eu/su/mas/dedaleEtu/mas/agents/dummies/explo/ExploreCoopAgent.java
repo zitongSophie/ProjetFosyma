@@ -9,16 +9,20 @@ import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.behaviours.startMyBehaviours;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExploCoopBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.MeBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.IsFinishedExploBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.MoveTogetherBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.ReceiveDecisionBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ReceiveMapBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.ReceiveNameBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.SendWhoIsHereBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.ReceivePosAndOdeursInExploBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.SendDecisionBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.SendPosAndOdeursBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.behaviours.ShareMapBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.TermineBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
 import jade.core.AID;
-import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.FSMBehaviour;
 import jade.domain.AMSService;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
@@ -61,13 +65,14 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 	private HashMap<String,Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>> otherInfo;
 	private List<String> agentToShareMap; //agents to share the map
 	private List<String> agentToAsk;
-	private Date myTemps=new java.util.Date();
-	
-	private Integer end=0; // fin de share,ReceiveName
-	private List<String> finiExpl;
-	
+	private int agent_exitvalue;//0->hunt alone,1->hunt together,2->finished
+	private List<String>list_agents_finished;
+	private Date myTemps;
 	private List<String>finiblock;
 	private boolean endblock=false;
+	private List<String>lstench;
+	private HashMap<String,String>agents_pos;
+	private Couple<Date,List<String>> list_recent_odeurs;
 	//
 
 	/**
@@ -82,9 +87,14 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		super.setup();
 		
 		final Object[] args = getArguments();
-		finiExpl=new ArrayList<String>();
+		//1)set the agent attributes
+		
+		myTemps=new java.util.Date();
+		list_agents_finished=new ArrayList<String>();
+		agent_exitvalue=-1;
+		lstench=new ArrayList<String>();
+		agents_pos=new HashMap<String,String>();
 		//List<String> list_agentNames=new ArrayList<String>();
-/*add*/	HashMap<String,String> agents_pos=new HashMap<String,String>();
 		
 //Inscription	
 		DFAgentDescription dfd = new DFAgentDescription();
@@ -103,13 +113,11 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		//initialisation 
+		//Initialization 
 		this.otherInfo=new HashMap<String,Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>>();
 		List<String> agentsNames=this.getAgentsListDF("coureur");
 		agentsNames.remove(this.getLocalName());
 		for(String s: agentsNames) {
-			agents_pos.put(s,(String)"-1");
-			
 			System.out.println(this.getLocalName()+"nom des agents "+s);
 			//SerializableSimpleGraph<String, MapAttribute> sg=this.myMap.getSerializableGraph();
 			Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>c;
@@ -126,14 +134,39 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		}
 		List<Behaviour> lb=new ArrayList<Behaviour>();
 		
+		//exploration fsm behaviour 	
+		String E="ExploCoop";
+		String SPO="SendPosAndOdeurs";//my current position, <date, the most recent information about stench that i have >, sending time
+		String RPO="ReceivePosAndOdeursInExplo";//sending date should be after myTemps update information
+		String SM="ShareMap";
+		String RM="ReceiveMap";//sending date should be after myTemps,if message receive type match ReceiveInformation :go to RIE
+		String IFE="IfFinishedExplo";//if finished give the exitvalue to finish
+		String F="Finished";//exit with exitvalue given
+		FSMBehaviour fsm_exploration = new FSMBehaviour(this); // Define the different states and behaviours 
+		fsm_exploration.registerFirstState (new ExploCoopBehaviour(null, myMap, otherInfo, agents_pos), E); // Register the transitions
+		fsm_exploration.registerState(new SendPosAndOdeursBehaviour(this, list_recent_odeurs),SPO);
+		fsm_exploration.registerState (new ReceivePosAndOdeursInExploBehaviour(this, agents_pos, this.list_recent_odeurs), RPO); 
+		fsm_exploration.registerState(new ShareMapBehaviour(this, myMap, agents_pos, otherInfo),SM);
+		fsm_exploration.registerState(new ReceiveMapBehaviour(this, myMap, agents_pos),RM);
+		fsm_exploration.registerState(new IsFinishedExploBehaviour(this, myMap),IFE);
+		fsm_exploration.registerLastState(new TermineBehaviour(), F);
+		fsm_exploration.registerDefaultTransition (E,SPO);//Default 
+		fsm_exploration.registerDefaultTransition (SPO,RPO);
+		fsm_exploration.registerDefaultTransition (RPO,SM);
+		fsm_exploration.registerDefaultTransition (SM,RM);
+		fsm_exploration.registerDefaultTransition (RM,IFE);
+		fsm_exploration. registerTransition (IFE,E, 1);
+		fsm_exploration. registerTransition (IFE,F, 2);
+		
+		//chasse alone fsm behaviour
+		
 		/************************************************
 		 * 
 		 * ADD the behaviours of the Dummy Moving Agent
 		 * 
 		 ************************************************/
+		lb.add(fsm_exploration);
 		
-		lb.add(new ExploCoopBehaviour(this,this.myMap,this.otherInfo,this.agentToAsk,this.agentToShareMap,agents_pos));
-		lb.add(new SendWhoIsHereBehaviour(this,this.agentToAsk));
 		
 		
 		/***
@@ -210,6 +243,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 				}
 			}
 		}
+		this.agentToAsk=whoAsk;
 		return whoAsk;
 	}	
 	
@@ -305,42 +339,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 
 	}
 	
-	public Integer setFini(String name) {
-		if(this.finiExpl.contains(name)) {
-			return 0;
-		}
-		boolean nouveau=this.finiExpl.add(name);
-		if(nouveau) {// set change
-			System.out.println(this.getLocalName()+" add "+ name+ " as finished");
-			if(!this.otherInfo.isEmpty()) {
-				if(this.finiExpl.size()==this.otherInfo.keySet().size()) {
-					List<String> agentsNames=this.getAgentsListDF("coureur");
-					agentsNames.remove(this.getLocalName());
-					if(isIdenticalList (finiExpl, agentsNames))
-						return 1; //tout le monde a fini
-				}
-			}
-		}
-		return 0;
-	}
-	
-	public void setFini(List<String> lname) {
-		this.finiExpl=new ArrayList<String>(lname);
-	}
-	
-	public void setEnd() {
-		this.end=1;
-	}
 
-	public Integer getFini() {
-		return this.end;
-	}
-	
-
-	
-	public List<String> getFiniExpl(){
-		return this.finiExpl;
-	}
 	
 	
 	//====pour la chasse
@@ -357,9 +356,6 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 	}
 	
 	public Integer setfiniblock(String name) {
-		if(this.finiExpl.contains(name)) {
-			return 0;
-		}
 		boolean nouveau=this.finiblock.add(name);
 		if(nouveau) {// set change
 			System.out.println(this.getLocalName()+" add "+ name+ " as finished");
@@ -404,10 +400,14 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
     }
     
 	public List<String> getNodeAdjacent(String node){
-		if(this.myMap==null) {
-			return null;
-		}
 		return this.myMap.getnodeAdjacent(node);
 	}
+	public void setAgentPos(HashMap<String,String>ap) {
+		this.agents_pos=ap;
+	}
+	public HashMap<String,String> getagentpos(){
+		return this.agents_pos;
+	}
+
 
 }
