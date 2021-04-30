@@ -232,23 +232,21 @@ public class MapRepresentation implements Serializable {
 	 * @param observe 
 	 * @return nextNode
 	 */
-	public String getNextNode(String myPosition,HashMap<String,String> agents_pos,List<String> asm,List<Couple<String,List<Couple<Observation,Integer>>>> lobs) {
+	public String getNextNode(String myPosition,HashMap<String,String> agents_pos) {
 		List<String> posAgent=new ArrayList<String>();
-		for (String ag: asm) {
+		for (String ag: agents_pos.values()) {
 			posAgent.add(agents_pos.get(ag));
 		}
-		List<String> mypath=this.getShortestPathToClosestOpenNode(myPosition,null);
-		int s1=100;
-		if(mypath!=null)
-			s1=mypath.size();
 		
+		List<String> mypath=this.getShortestPathToClosestOpenNode(myPosition,null);
+		if(posAgent.isEmpty()) {
+			return mypath.get(0);
+		}
+		int s1 = mypath.size();
 		int s2;
 		List<String> nodes = new ArrayList<String>();//open nodes will be explored by other agents
 //		System.out.println("mypath"+mypath+"size"+mypath.size());
 		List<String>otherspath;
-		if(agents_pos==null) {
-			return mypath.get(0);
-		}
 		for (String pos:posAgent){
 			if(this.g.getNode(pos)==null) {
 				continue;
@@ -268,9 +266,15 @@ public class MapRepresentation implements Serializable {
 		
 			
 		}
-		List<String> nodeAdj=this.nodeAdjacent(mypath.get(0),lobs, posAgent);
-		Integer r=(int)( Math.random() *  nodeAdj.size()  );
 		if(posAgent.contains(mypath.get(0))) {
+	        List<String> nodeAdj=this.getnodeAdjacent(mypath.get(0));
+	        for (String pos:posAgent){
+	            nodeAdj.remove(pos);
+	        }
+	        if(nodeAdj.isEmpty()) {
+	            nodeAdj.add(myPosition);
+	        }
+			Integer r=(int)( Math.random() *  nodeAdj.size()  );
 			return nodeAdj.get(r);
 		}
 		

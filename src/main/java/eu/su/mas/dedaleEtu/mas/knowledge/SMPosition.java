@@ -2,20 +2,19 @@ package eu.su.mas.dedaleEtu.mas.knowledge;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
-import dataStructures.serializableGraph.SerializableSimpleGraph;
-import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
+import dataStructures.tuple.Couple;
 
 public class SMPosition implements Serializable {
 
 	private static final long serialVersionUID = -7126302223478378640L;
 	private String position; //ma POSITION ou NEXT POSITION
-	private List<String> predictPosGolem;
-	private List<String> agentsArgue;
+	private Couple<Date,List<String>> predictPosGolem;
 	private Date myDate;
 
-	public SMPosition(String pos,List<String> predictoPosGolem,Date date) {// CHG ENLEVER agenArgue
+	public SMPosition(String pos,Date date, Couple<Date,List<String>> predictPosGolem) {// CHG ENLEVER agenArgue
 		position=pos; //position du golem
 		this.predictPosGolem=predictPosGolem; //liste des positions possibles du golem
 		//this.agentsArgue=agentsArgue;
@@ -25,7 +24,7 @@ public class SMPosition implements Serializable {
 		return position;
 	}
 
-	public List<String> getPredicPosGolem() {
+	public Couple<Date,List<String>> getPredicPosGolem() {
 		return predictPosGolem;
 	}
 	
