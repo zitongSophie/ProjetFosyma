@@ -18,6 +18,7 @@ import eu.su.mas.dedaleEtu.mas.knowledge.SMPosition;
 import eu.su.mas.dedaleEtu.mas.knowledge.SerializableMessage;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
@@ -32,52 +33,32 @@ import jade.lang.acl.UnreadableException;
  * @author hc
  *
  */
-public class AddEndBehaviour extends SimpleBehaviour{
+public class AddEndBehaviour extends OneShotBehaviour{
 	
-	private MapRepresentation myMap;
-	private List<String> listReceivers;
-	private HashMap<String,Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>>  agentsInfo;
-	private boolean finished=false;
 	private List<String> Cg;
-
-	/**
-	 * The agent periodically share its map.
-	 * It blindly tries to send all its graph to its friend(s)  	
-	 * If it was written properly, this sharing action would NOT be in a ticker behaviour and only a subgraph would be shared.
-
-	 * @param a the agent
-	 * @param period the periodicity of the behaviour (in ms)
-	 * @param mymap (the map to share)
-	 * @param receivers the list of agents to send the map to
-	 */
-	public AddEndBehaviour(Agent a,MapRepresentation mymap, List<String> receivers) {
+	
+	public AddEndBehaviour(Agent a,List<String> cg) {
 		super(a);
-		this.myMap=mymap;
-		this.listReceivers=receivers;	
-		this.Cg=new ArrayList<String>();
+		this.Cg=cg;
 	}
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -568863390879327961L;
 	public void action() {
-		//4) At each time step, the agent blindly send all its graph to its surrounding to illustrate how to share its knowledge (the topology currently) with the the others agents. 	
-		// If it was written properly, this sharing action should be in a dedicated behaviour set, the receivers be automatically computed, and only a subgraph would be shared.
-		//System.out.println("entree ADD END "+this.myAgent.getLocalName());
-		
+
 		try {
 			this.myAgent.doWait(150);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		if(this.myMap==null) block();
 		
 		
 		final MessageTemplate msgT = MessageTemplate.and(
 				MessageTemplate.MatchPerformative(ACLMessage.INFORM),
 				MessageTemplate.MatchProtocol("ADD_ME_AS_FINISHED"));
 		ACLMessage msg = this.myAgent.receive(msgT);
+		if(msg==null) {
+			block();
+		}
 		while(msg!=null) {
 			SMEnd sgreceived=null;
 			try {
@@ -91,25 +72,25 @@ public class AddEndBehaviour extends SimpleBehaviour{
 				((ExploreCoopAgent) this.myAgent).setFini(msg.getSender().getLocalName());
 			}
 			if(((ExploreCoopAgent) this.myAgent).isIdenticalList(((ExploreCoopAgent) this.myAgent).getAgentsListDF("coureur"),sgreceived.getListFini())) {// this.myAgent sait que le sender sait que tout le monde a fini
-				System.out.println(this.myAgent.getLocalName()+" find "+msg.getSender().getLocalName()+" knew everything "+sgreceived.getListFini());
+				//System.out.println(this.myAgent.getLocalName()+" find "+msg.getSender().getLocalName()+" knew everything "+sgreceived.getListFini());
 				if(!this.Cg.contains(msg.getSender().getLocalName())){// ajoute l agent dans ceux qui savent que tout le monde a fini
 					this.Cg.add(msg.getSender().getLocalName());
+					((ExploreCoopAgent) this.myAgent).setCg(msg.getSender().getLocalName());
 				}
 				if(!Cg.contains(this.myAgent.getLocalName())) {
 					this.Cg.add(this.myAgent.getLocalName());
 					((ExploreCoopAgent) this.myAgent).setFini(sgreceived.getListFini());
-					System.out.println(this.myAgent.getLocalName()+" knew everything now "+((ExploreCoopAgent) this.myAgent).getFiniExpl().toString());
+					System.out.println(this.myAgent.getLocalName()+" knew everything now "+this.Cg.toString());
 				}
 				if(((ExploreCoopAgent) this.myAgent).isIdenticalList(((ExploreCoopAgent) this.myAgent).getAgentsListDF("coureur"),this.Cg)) {// tout le monde sait que tout le monde a fini
 					System.out.println("------------------------------------\n"+this.myAgent.getLocalName()+" knew everything now "+((ExploreCoopAgent) this.myAgent).getFiniExpl().toString());
-					finished=true;
 				}
 				
 			}
 			msg = this.myAgent.receive(msgT);
 		}
 	}
-	
+	/*
 	@Override
 	public boolean done() {
 		if(finished) {
@@ -118,7 +99,7 @@ public class AddEndBehaviour extends SimpleBehaviour{
 		}
 		return finished;
 	}
-
+	*/
 
 
 }
