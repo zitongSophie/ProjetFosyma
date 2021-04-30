@@ -38,6 +38,7 @@ public class ReceiveNameBehaviour extends SimpleBehaviour {
 	public void action() {
 		//System.out.println("ReceiveNameBehaviour");
 		//1) receive a message
+		System.out.println(this.myAgent.getLocalName()+" ReceiveNameBehaviour");
 		try {
 			this.myAgent.doWait(100);
 		} catch (Exception e) {

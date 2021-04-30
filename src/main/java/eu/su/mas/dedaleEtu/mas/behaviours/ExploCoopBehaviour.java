@@ -102,27 +102,6 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 		//0) Retrieve the current position
 		String myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 		
-		if(posavant.equals(myPosition)) {
-			if(!this.agents_pos.containsValue(nextnodeblock)) {
-				System.out.println("explo"+this.myAgent+" pos current "+myPosition+" agents_pos "+this.agents_pos+" nextnode block "+nextnodeblock);
-				if(!this.myMap.getOpenNodes().contains(nextnodeblock)) {
-					boolean isblock=true;
-					for(String pos :this.myMap.getnodeAdjacent(nextnodeblock)) {
-						if(!this.agents_pos.containsValue(pos)) {
-							isblock=false;
-						}
-					}
-					if(isblock==true) {
-						count+=1;
-					}
-				}
-			}
-		}else {
-			count=0;
-		}
-		if(count==10) {
-			finished=true;
-		}
 		if (myPosition!=null){
 			//List of observable from the agent's current position
 			List<Couple<String,List<Couple<Observation,Integer>>>> lobs=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
@@ -239,9 +218,8 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 				
 				posavant=myPosition;
 				nextnodeblock=nextNode;
-				
+				((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
 			}
-			((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
 		}
 	}
 

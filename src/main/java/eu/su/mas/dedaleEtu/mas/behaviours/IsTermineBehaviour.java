@@ -56,7 +56,11 @@ public class IsTermineBehaviour extends OneShotBehaviour {
 
 	@Override
 	public void action() {
-		
+		try {
+			this.myAgent.doWait(250);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		HashMap<String,Date>time=new HashMap<String,Date>();
 		final MessageTemplate msgTemplate = MessageTemplate.and(
 				MessageTemplate.MatchPerformative(ACLMessage.INFORM),
@@ -95,7 +99,6 @@ public class IsTermineBehaviour extends OneShotBehaviour {
 		}else {
 			String posavant=this.pos_avant_next.get(0);
 			String nextNode=this.pos_avant_next.get(1);
-			
 			if(posavant.equals(((AbstractDedaleAgent)this.myAgent).getCurrentPosition())) {
 				if(!((AbstractDedaleAgent)this.myAgent).moveTo(nextNode)) {
 					
@@ -124,7 +127,6 @@ public class IsTermineBehaviour extends OneShotBehaviour {
 					
 				}
 			}
-			System.out. println ( "----mytime "+((ExploreCoopAgent) this.myAgent).getmyTemps()+this.myAgent.getLocalName()+"pos avant"+posavant+"current pos"+((AbstractDedaleAgent)this.myAgent).getCurrentPosition()+"next move"+nextNode+"agentname ISTERMINEbehaviour\n--------" ) ;
 		}
 		
 		

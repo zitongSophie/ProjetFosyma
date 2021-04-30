@@ -24,13 +24,10 @@ import jade.lang.acl.MessageTemplate;
 
 public class SendBehaviour extends OneShotBehaviour{
 	private static final long serialVersionUID = 8802075205635695208L;
-	private HashMap<String,String> agents_pos=new HashMap<String,String>();
 	private HashMap<String,List<String>> myStench;
-	private List<String>agentproche;
 	
-	public SendBehaviour(final Agent myagent,List<String>agentproche,HashMap<String,List<String>>stench) {
+	public SendBehaviour(final Agent myagent,HashMap<String,List<String>>stench) {
 		super(myagent);
-		this.agentproche=agentproche;
 		this.myStench=stench;
 	}
 	
@@ -41,6 +38,7 @@ public class SendBehaviour extends OneShotBehaviour{
 		msg2.setSender(this.myAgent.getAID());
 		msg2.setProtocol("SEND_ODEUR");
 		for (String agentName : ((ExploreCoopAgent) this.myAgent).getAgentName()) {
+			System.out.println(this.myAgent.getLocalName()+"send_odeur to :"+agentName);
 			msg2.addReceiver(new AID(agentName,AID.ISLOCALNAME));
 		}
 		SMPosition contents=new SMPosition(((AbstractDedaleAgent)this.myAgent).getCurrentPosition(),lstench,new java.util.Date());
@@ -51,7 +49,7 @@ public class SendBehaviour extends OneShotBehaviour{
 			e.printStackTrace();
 		}
 		((AbstractDedaleAgent)  this.myAgent).sendMessage(msg2);
-		System.out. println ( "-------"+contents.getDate()+"stench "+lstench+this.myStench+this.myAgent.getLocalName()+" sendbehaviour\n--------" ) ;
+		//System.out. println ( "-------get agent name"+contents.getDate()+"stench "+lstench+this.myStench+this.myAgent.getLocalName()+" sendbehaviour\n--------" ) ;
 	}
 
 

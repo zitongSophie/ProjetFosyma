@@ -30,7 +30,6 @@ public class MoveAloneBehaviour extends OneShotBehaviour {
 	 * Current knowledge of the agent regarding the environment
 	 */
 	private MapRepresentation myMap;
-	private Date myTemps;
 	private List<String> pos_avant_next;
 	/**
 	 * 
@@ -38,16 +37,16 @@ public class MoveAloneBehaviour extends OneShotBehaviour {
 	 * @param myMap known map of the world the agent is living in
 	 * @param agentNames name of the agents to share the map with
 	 */																												//add attribute
-		public MoveAloneBehaviour(final Agent myagent, MapRepresentation myMap,Date tps,List<String>pos_avant_next) {
+		public MoveAloneBehaviour(final Agent myagent, MapRepresentation myMap,List<String>pos_avant_next) {
 			super(myagent);
 			this.myMap=myMap;	
 			this.myAgent=myagent;
-			this.myTemps=tps;
 			this.pos_avant_next=pos_avant_next;
 		}
 
 	@Override
 	public void action() {
+		
 		//0) Retrieve the current position
 		String myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 		String posavant=this.pos_avant_next.get(0);
@@ -88,7 +87,7 @@ public class MoveAloneBehaviour extends OneShotBehaviour {
 			this.pos_avant_next.add(1, nextNode);
 			((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
 			((ExploreCoopAgent) this.myAgent).setmyTemps();
-			System.out. println ( "----mytime "+this.myTemps+" stench "+lstench+this.myAgent.getLocalName()+"current pos"+((AbstractDedaleAgent)this.myAgent).getCurrentPosition()+"next move"+nextNode+"agentname chassebehaviour\n--------" ) ;
+			System.out. println ( "----mytime "+((ExploreCoopAgent) this.myAgent).getmyTemps()+" stench "+lstench+this.myAgent.getLocalName()+"current pos"+((AbstractDedaleAgent)this.myAgent).getCurrentPosition()+"next move"+nextNode+"MoveAloneBehaviour\n--------" ) ;
 			
 		}
 		

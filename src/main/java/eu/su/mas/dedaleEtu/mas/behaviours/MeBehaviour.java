@@ -30,7 +30,7 @@ public class MeBehaviour extends SimpleBehaviour{
 	
 	@Override
 	public void action() {
-		
+		System.out.println(this.myAgent.getLocalName()+" MeBehaviour");
 		//1) receive the SendWhoIsHere message
 		try {
 			this.myAgent.doWait(100);
@@ -50,7 +50,7 @@ public class MeBehaviour extends SimpleBehaviour{
 			this.agents_pos.put(msg.getSender().getLocalName(), msg.getContent());
 				
 			names.add(msg.getSender());	
-			msg = this.myAgent.receive(msgTemplate);
+			//msg = this.myAgent.receive(msgTemplate);
 			//System.out.println("SendMessage behaviour from agent: "+ msg.getSender().getLocalName()+this.myAgent.getLocalName());
 		}
 		//send
@@ -62,7 +62,6 @@ public class MeBehaviour extends SimpleBehaviour{
 			msg2.addReceiver(receiver); 
 		}//4) send the message
 		String pos=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
-		System.out.println(pos);
 		msg2.setContent(pos);
 		((AbstractDedaleAgent)  this.myAgent).sendMessage(msg2);
 	}

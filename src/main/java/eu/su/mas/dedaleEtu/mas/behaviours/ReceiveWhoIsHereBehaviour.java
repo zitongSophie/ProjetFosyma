@@ -52,6 +52,11 @@ public class ReceiveWhoIsHereBehaviour extends OneShotBehaviour {
 
 	@Override
 	public void action() {
+		try {
+			this.myAgent.doWait(250);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		
 		HashMap<String,Date>time=new HashMap<String,Date>();
 		final MessageTemplate msgTemplate = MessageTemplate.and(
@@ -60,7 +65,7 @@ public class ReceiveWhoIsHereBehaviour extends OneShotBehaviour {
 		ACLMessage msg = this.myAgent.receive(msgTemplate);
 		List<String>receivers=new ArrayList<String>();
 		if(msg!=null) {
-			System.out.println("MoveAloneBehaviour termine car communication");
+			System.out.println("MoveAloneBehaviour termine car communication who is here");
 			exitvalue=2;
 			this.myAgent.addBehaviour(new MoveTogetherBehaviour(myAgent, myMap, null, receivers));
 		}
@@ -94,8 +99,6 @@ public class ReceiveWhoIsHereBehaviour extends OneShotBehaviour {
 			String myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 			SerializableMessage smsg=new SerializableMessage(this.myAgent.getLocalName(),myPosition,sg);
 		}
-		System.out. println ( "----mytime "+((ExploreCoopAgent) this.myAgent).getmyTemps()+this.myAgent.getLocalName()+"current pos"+((AbstractDedaleAgent)this.myAgent).getCurrentPosition()+"Receivewhoisherebehaviour\n--------" ) ;
-		
 		
 	}
 	public int onEnd() {return exitvalue ;}
