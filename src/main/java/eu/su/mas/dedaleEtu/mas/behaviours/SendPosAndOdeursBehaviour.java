@@ -38,11 +38,10 @@ public class SendPosAndOdeursBehaviour extends OneShotBehaviour{
 		msg2.setSender(this.myAgent.getAID());
 		msg2.setProtocol("POS_AND_ODEURS");
 		for (String agentName : ((ExploreCoopAgent) this.myAgent).getAgentName()) {
-			System.out.println(this.myAgent.getLocalName()+"send_odeur to :"+agentName);
 			msg2.addReceiver(new AID(agentName,AID.ISLOCALNAME));
 		}
 		if(!lstench.isEmpty()) {
-			list_recent_odeurs=new Couple(((ExploreCoopAgent) this.myAgent).getmyTemps(),lstench );
+			list_recent_odeurs=new Couple<Date,List<String>>(((ExploreCoopAgent) this.myAgent).getmyTemps(),lstench );
 		}
 		SMPosition contents=new SMPosition(((AbstractDedaleAgent)this.myAgent).getCurrentPosition(), new java.util.Date(),this.list_recent_odeurs);
 		
@@ -53,7 +52,7 @@ public class SendPosAndOdeursBehaviour extends OneShotBehaviour{
 			e.printStackTrace();
 		}
 		((AbstractDedaleAgent)  this.myAgent).sendMessage(msg2);
-		//System.out. println ( "-------get agent name"+contents.getDate()+"stench "+lstench+this.myStench+this.myAgent.getLocalName()+" sendbehaviour\n--------" ) ;
+		//System.out. println ( "======================\n"+this.myAgent.getLocalName()+"send POS_AND_ODEURS time:"+contents.getDate()+"stench "+lstench+""+"list odeurs "+list_recent_odeurs+" \nsendbehaviour======================\n" ) ;
 	}
 
 

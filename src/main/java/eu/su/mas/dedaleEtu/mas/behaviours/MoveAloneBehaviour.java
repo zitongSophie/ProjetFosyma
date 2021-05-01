@@ -51,6 +51,9 @@ public class MoveAloneBehaviour extends OneShotBehaviour {
 		String myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 		String posavant=this.pos_avant_next.get(0);
 		String nextNode=this.pos_avant_next.get(1);
+		if(myMap==null) {
+			this.myMap=( (ExploreCoopAgent) this.myAgent).getMap();
+		}
 		if (myPosition!=null){
 			//List of observable from the agent's current position
 			/**
@@ -88,13 +91,6 @@ public class MoveAloneBehaviour extends OneShotBehaviour {
 			((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
 			((ExploreCoopAgent) this.myAgent).setmyTemps();
 			System.out. println ( "----mytime "+((ExploreCoopAgent) this.myAgent).getmyTemps()+" stench "+lstench+this.myAgent.getLocalName()+"current pos"+((AbstractDedaleAgent)this.myAgent).getCurrentPosition()+"next move"+nextNode+"MoveAloneBehaviour\n--------" ) ;
-			
 		}
-		
 	}
-		
-
-
-	
-
 }

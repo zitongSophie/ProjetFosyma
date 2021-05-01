@@ -235,7 +235,7 @@ public class MapRepresentation implements Serializable {
 	public String getNextNode(String myPosition,HashMap<String,String> agents_pos) {
 		List<String> posAgent=new ArrayList<String>();
 		for (String ag: agents_pos.values()) {
-			posAgent.add(agents_pos.get(ag));
+			posAgent.add(ag);
 		}
 		
 		List<String> mypath=this.getShortestPathToClosestOpenNode(myPosition,null);
@@ -266,8 +266,9 @@ public class MapRepresentation implements Serializable {
 		
 			
 		}
+		List<String> nodeAdj=this.getnodeAdjacent(myPosition);
 		if(posAgent.contains(mypath.get(0))) {
-	        List<String> nodeAdj=this.getnodeAdjacent(mypath.get(0));
+	        
 	        for (String pos:posAgent){
 	            nodeAdj.remove(pos);
 	        }
@@ -277,7 +278,8 @@ public class MapRepresentation implements Serializable {
 			Integer r=(int)( Math.random() *  nodeAdj.size()  );
 			return nodeAdj.get(r);
 		}
-		
+
+		//System.out.println("maprepresentation get nextnode : "+mypath.get(0)+" \t nodeadj : "+nodeAdj+"\t pos agent: "+posAgent);
 		return mypath.get(0);
 		
 		

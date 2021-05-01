@@ -9,16 +9,18 @@ import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.behaviours.startMyBehaviours;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExploCoopBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.FinishedBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.IsFinishedExploBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.IsFinishedHuntAloneBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.MoveAloneBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.MoveTogetherBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ReceiveDecisionBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ReceiveMapBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.ReceivePosAndOdeursInExploBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.ReceivePosAndOdeursBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.SendDecisionBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.SendPosAndOdeursBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.behaviours.ShareMapBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.TermineBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
 import jade.core.AID;
 import jade.core.behaviours.Behaviour;
@@ -65,14 +67,17 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 	private HashMap<String,Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>> otherInfo;
 	private List<String> agentToShareMap; //agents to share the map
 	private List<String> agentToAsk;
-	private int agent_exitvalue;//0->hunt alone,1->hunt together,2->finished
-	private List<String>list_agents_finished;
+	private int fsm_exitvalue=0;//0->hunt alone,1->hunt together,2->finished
 	private Date myTemps;
 	private List<String>finiblock;
 	private boolean endblock=false;
 	private List<String>lstench;
 	private HashMap<String,String>agents_pos;
 	private Couple<Date,List<String>> list_recent_odeurs;
+	private List<String>Cg;
+	private List<String> finiExpl;
+	private Integer end=0;
+	private List<String> CgChasse;
 	//
 
 	/**
@@ -85,17 +90,18 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 	protected void setup(){
 
 		super.setup();
-		
+
 		final Object[] args = getArguments();
 		//1)set the agent attributes
-		
+		this.Cg=new ArrayList<String>();
 		myTemps=new java.util.Date();
-		list_agents_finished=new ArrayList<String>();
-		agent_exitvalue=-1;
+		fsm_exitvalue=0;
 		lstench=new ArrayList<String>();
 		agents_pos=new HashMap<String,String>();
+		this.CgChasse=new ArrayList<String>();
 		//List<String> list_agentNames=new ArrayList<String>();
-		
+		this.finiExpl=new ArrayList<String>();
+		this.list_recent_odeurs=new Couple<Date,List<String>>(myTemps,new ArrayList<String>() );
 //Inscription	
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(this.getAID()); // The agent AID
@@ -134,38 +140,80 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		}
 		List<Behaviour> lb=new ArrayList<Behaviour>();
 		
+		List<String>pos_avant_next=new ArrayList<String>();
+		pos_avant_next.add("-1");
+		pos_avant_next.add("-1");
+		//main fsm behaviour
+		String E=" ExploCoop ";
+		String HA=" HuntAlone ";
+		String HT=" HuntTogether ";
+		String F="Finished";//exit with exitvalue given
+		FSMBehaviour fsm_main = new FSMBehaviour(this);
+		fsm_main=new FSMBehaviour(this);
+		FSMBehaviour fsm_exploration = new FSMBehaviour(this); 
+		FSMBehaviour fsm_hunt_alone = new FSMBehaviour(this);
+		fsm_main.registerFirstState(fsm_exploration, E);
+		fsm_main.registerState(fsm_hunt_alone, HA);
+		fsm_main.registerState(new FinishedBehaviour(this," ALL "), F);
+		String s="share";
+		fsm_main.registerLastState(new ShareMapBehaviour(this, myMap, agents_pos, otherInfo),s);
+		fsm_main.registerDefaultTransition(F, s);
+		fsm_main.registerTransition(E, HA, 0);
+		//fsm_main.registerTransition(E, HT, 1);
+		fsm_main.registerTransition(E, F, 2);
+		//fsm_main.registerTransition(HA, HT,1);
+		fsm_main.registerTransition(HA, F, 2);
+		//fsm_main.registerTransition(HT, F, 2);
 		//exploration fsm behaviour 	
-		String E="ExploCoop";
-		String SPO="SendPosAndOdeurs";//my current position, <date, the most recent information about stench that i have >, sending time
-		String RPO="ReceivePosAndOdeursInExplo";//sending date should be after myTemps update information
+		String ME="MoveExploCoop";
+		String SPOE="SendPosAndOdeurs";//my current position, <date, the most recent information about stench that i have >, sending time
+		String RPOE="ReceivePosAndOdeurs";//sending date should be after myTemps update information
 		String SM="ShareMap";
 		String RM="ReceiveMap";//sending date should be after myTemps,if message receive type match ReceiveInformation :go to RIE
 		String IFE="IfFinishedExplo";//if finished give the exitvalue to finish
-		String F="Finished";//exit with exitvalue given
-		FSMBehaviour fsm_exploration = new FSMBehaviour(this); // Define the different states and behaviours 
-		fsm_exploration.registerFirstState (new ExploCoopBehaviour(null, myMap, otherInfo, agents_pos), E); // Register the transitions
-		fsm_exploration.registerState(new SendPosAndOdeursBehaviour(this, list_recent_odeurs),SPO);
-		fsm_exploration.registerState (new ReceivePosAndOdeursInExploBehaviour(this, agents_pos, this.list_recent_odeurs), RPO); 
+		// Define the different states and behaviours 
+		fsm_exploration.registerFirstState (new ExploCoopBehaviour(this, myMap, otherInfo,agents_pos, pos_avant_next), ME); // Register the transitions
+		fsm_exploration.registerState(new SendPosAndOdeursBehaviour(this, list_recent_odeurs),SPOE);
+		fsm_exploration.registerState (new ReceivePosAndOdeursBehaviour(this, agents_pos, this.list_recent_odeurs), RPOE); 
 		fsm_exploration.registerState(new ShareMapBehaviour(this, myMap, agents_pos, otherInfo),SM);
 		fsm_exploration.registerState(new ReceiveMapBehaviour(this, myMap, agents_pos),RM);
-		fsm_exploration.registerState(new IsFinishedExploBehaviour(this, myMap),IFE);
-		fsm_exploration.registerLastState(new TermineBehaviour(), F);
-		fsm_exploration.registerDefaultTransition (E,SPO);//Default 
-		fsm_exploration.registerDefaultTransition (SPO,RPO);
-		fsm_exploration.registerDefaultTransition (RPO,SM);
+		fsm_exploration.registerState(new IsFinishedExploBehaviour(this, myMap, agents_pos, pos_avant_next, pos_avant_next),IFE);
+		fsm_exploration.registerLastState(new FinishedBehaviour(this,E), F);
+		fsm_exploration.registerDefaultTransition (ME,SPOE);//Default 
+		fsm_exploration.registerDefaultTransition (SPOE,RPOE);
+		fsm_exploration.registerDefaultTransition (RPOE,SM);
 		fsm_exploration.registerDefaultTransition (SM,RM);
 		fsm_exploration.registerDefaultTransition (RM,IFE);
-		fsm_exploration. registerTransition (IFE,E, 1);
+		fsm_exploration. registerTransition (IFE,ME, 1);
 		fsm_exploration. registerTransition (IFE,F, 2);
 		
 		//chasse alone fsm behaviour
+		String MA="MoveAlone";
+		String SPOHA="SendGoTogether";
+		String IFHA="IsFinishedHuntAlone";
+		// Define the different states and behaviours 
+        fsm_hunt_alone.registerFirstState(new MoveAloneBehaviour(this, myMap,pos_avant_next),MA); 
+        fsm_hunt_alone.registerState (new SendPosAndOdeursBehaviour(this,list_recent_odeurs), SPOHA); // Register the transitions
+        fsm_hunt_alone.registerState(new IsFinishedHuntAloneBehaviour(this, myMap, agents_pos, pos_avant_next,finiExpl),IFHA);
+        fsm_hunt_alone.registerState(new ShareMapBehaviour(this, myMap, agents_pos, otherInfo),SM);
+        fsm_hunt_alone.registerLastState(new FinishedBehaviour(this,HA), F);
+        fsm_hunt_alone.registerDefaultTransition (MA,SPOHA);//Default 
+        fsm_hunt_alone.registerDefaultTransition (SPOHA,IFHA);
+        fsm_hunt_alone.registerDefaultTransition(SM, F);
+        //1:continue;
+        //2:fini chasse solo fsm(fini block ou passer chasse together)
+        fsm_hunt_alone.registerTransition (IFHA,MA, 1);//move alone
+        fsm_hunt_alone.registerTransition (IFHA,F, 2);//finished
+        fsm_hunt_alone.registerTransition (IFHA,SM, 0);//share map
+        //fsm. registerTransition (it,t, 2);
+        //this.myAgent.addBehaviour(fsm);
 		
 		/************************************************
 		 * 
 		 * ADD the behaviours of the Dummy Moving Agent
 		 * 
 		 ************************************************/
-		lb.add(fsm_exploration);
+		lb.add(fsm_main);
 		
 		
 		
@@ -226,8 +274,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 	//Modifier les donnees du graphes
 	public Couple<Integer,SerializableSimpleGraph<String, MapAttribute>> setCouple(String agentName,SerializableSimpleGraph<String, MapAttribute>sg,Integer vu){
 		Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>c;
-		Integer nbvus=this.otherInfo.get(agentName).getLeft();
-		c=new Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>(nbvus+vu, sg);
+		c=new Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>(vu, sg);
 		return c;
 	}
 	
@@ -340,7 +387,42 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 	}
 	
 
-	
+	public Integer setFini(String name) {
+        if(this.finiExpl.contains(name)) {
+            return 0;
+        }
+        boolean nouveau=this.finiExpl.add(name);
+        if(nouveau) {// set change
+            System.out.println(this.getLocalName()+" add "+ name+ " as finished");
+            if(!this.otherInfo.isEmpty()) {
+                if(this.finiExpl.size()==this.otherInfo.keySet().size()) {
+                    List<String> agentsNames=this.getAgentsListDF("coureur");
+                    agentsNames.remove(this.getLocalName());
+                    if(isIdenticalList (finiExpl, agentsNames))
+                        return 1; //tout le monde a fini
+                }
+            }
+        }
+        return 0;
+    }
+
+    public void setFini(List<String> lname) {
+        this.finiExpl=new ArrayList<String>(lname);
+    }
+
+    public void setEnd() {
+        this.end=1;
+    }
+
+    public Integer getFini() {
+        return this.end;
+    }
+
+
+
+    public List<String> getFiniExpl(){
+        return this.finiExpl;
+    }
 	
 	//====pour la chasse
 	public void setendblock() {
@@ -375,7 +457,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		this.finiblock=new ArrayList<String>(lname);
 	}
 	
-	
+	//====        ====//
 	public List<String> lstench(){
 		List<Couple<String,List<Couple<Observation,Integer>>>> lobs=this.observe();
 		List<String> lstench=new ArrayList<String>();
@@ -391,23 +473,71 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		}
 		return lstench;
 	}
+	public void set_fsm_exitvalue(int i) {
+		this.fsm_exitvalue=i;
+	}
 	
+	public int get_fsm_exitvalue() {
+		return this.fsm_exitvalue;
+	}
 	public void setmyTemps() {
         this.myTemps=new java.util.Date();
     }
     public Date getmyTemps() {
         return this.myTemps;
     }
+	public MapRepresentation getMap() {
+		return this.myMap;
+	}
+	public void setMap(MapRepresentation m) {
+		this.myMap=m;
+	}
+    //===      ====//
     
 	public List<String> getNodeAdjacent(String node){
 		return this.myMap.getnodeAdjacent(node);
 	}
-	public void setAgentPos(HashMap<String,String>ap) {
-		this.agents_pos=ap;
+	
+	
+
+	
+	public boolean setCg(String name){
+		  if(!Cg.contains(name)){
+		    this.Cg.add(name);
+		    return true; 
+		  }
+		  return false;
 	}
-	public HashMap<String,String> getagentpos(){
-		return this.agents_pos;
+
+	public List<String> getCg(){
+		 return this.Cg;
 	}
+	
+    public boolean isAllFiniExplo() {
+        if(this.isIdenticalList(this.getAgentsListDF("coureur"), Cg)) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isAllFiniChasse() {
+        if(this.isIdenticalList(this.getAgentsListDF("coureur"), CgChasse)) {
+            return true;
+        }
+        return false;
+    }
+    
+    public boolean setCgChasse(String name){
+        if(!CgChasse.contains(name)){
+            this.CgChasse.add(name);
+            return true; 
+        }
+          return false;
+    }
+
+    public List<String> getCgChasse(){
+        return this.CgChasse;
+    }
 
 
 }

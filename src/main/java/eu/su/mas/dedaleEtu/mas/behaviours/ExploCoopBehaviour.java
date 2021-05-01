@@ -18,12 +18,14 @@ import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
+import eu.su.mas.dedaleEtu.mas.knowledge.SerializableMessage;
 import eu.su.mas.dedaleEtu.mas.behaviours.ShareMapBehaviour;
 
 import org.graphstream.graph.Node;
 import jade.core.AID;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.FSMBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
@@ -48,64 +50,52 @@ import jade.lang.acl.UnreadableException;
  * @author hc
  *
  */
-public class ExploCoopBehaviour extends SimpleBehaviour {
+public class ExploCoopBehaviour extends OneShotBehaviour {
 
 	private static final long serialVersionUID = 8567689731496787661L;
-
-	private boolean finished = false;
 
 	/**
 	 * Current knowledge of the agent regarding the environment
 	 */
 	private MapRepresentation myMap;
 	private HashMap<String,Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>>  myInfo;
-	private List<String> myAgentToShareMap; //agents to share the map
-	private List<String> myAgentToAsk;
 	private HashMap<String,String>agents_pos;
-	private HashMap<String,String> finiExpl;
-	private String posavant="-1";
-	private int count=0;
-	private String nextnodeblock;
-/**
+	private List<String>pos_avant_next;
+
+	/**
  * 
  * @param myagent
  * @param myMap known map of the world the agent is living in
  * @param agentNames name of the agents to share the map with
  */																												//add attribute
-	public ExploCoopBehaviour(final AbstractDedaleAgent myagent, MapRepresentation myMap,HashMap<String,Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>> info,List<String> ata,List<String> atsm,HashMap<String,String> pos) {
+	public ExploCoopBehaviour(final AbstractDedaleAgent myagent, MapRepresentation myMap,HashMap<String,Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>> info,HashMap<String,String>agents_pos,List<String>pos_avant_next) {
 		super(myagent);
 		this.myMap=myMap;
 		this.myInfo=info;	
-		this.myAgentToAsk=ata;
-		this.myAgentToAsk=((ExploreCoopAgent) this.myAgent).setAgentToAsk();
-		this.myAgent=myagent;
-		this.myAgentToShareMap=atsm;
-		this.myAgentToShareMap=((ExploreCoopAgent) this.myAgent).setAgentToAsk();
-		this.agents_pos=pos;
+		this.agents_pos=agents_pos;
+		this.pos_avant_next=pos_avant_next;
 	}
 
 	@Override
 	public void action() {
-
-		if(this.myMap==null) {
-			this.myMap= new MapRepresentation();
-//===============add behaviour=====
-			this.myAgent.addBehaviour(new ShareMapBehaviour(this.myAgent,this.myMap,this.myAgentToShareMap,this.myInfo));
-			this.myAgent.addBehaviour(new ReceiveMapBehaviour(this.myAgent,this.myMap));
-			//this.myAgent.addBehaviour(new ReceiveDeclareBehaviour(this.myAgent,this.agents_pos));
-			this.myAgent.addBehaviour(new MeBehaviour(this.myAgent,this.agents_pos));
-			this.myAgent.addBehaviour(new ReceiveNameBehaviour(this.myAgent,this.myAgentToShareMap));
-			this.myAgent.addBehaviour(new ReceiveAllMapThenMoveTogetherBehaviour (myAgent, myMap));
-		}
 		
-
+		//this.agents_pos=((ExploreCoopAgent) this.myAgent).get_agents_pos();
+		//System.out.println("\n\n======================");
+		//System.out.println(this.myAgent.getLocalName()+"explo begin agents_pos"+agents_pos);
+		if(this.myMap==null) {
+			MapRepresentation map=new MapRepresentation();
+			//System.out.println("======================explocoop mymap init null \n");
+			this.myMap= map;
+			(( ExploreCoopAgent) this.myAgent).setMap(myMap);
+		}
 		//0) Retrieve the current position
 		String myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
-		
 		if (myPosition!=null){
 			//List of observable from the agent's current position
 			List<Couple<String,List<Couple<Observation,Integer>>>> lobs=((AbstractDedaleAgent)this.myAgent).observe();//myPosition
-
+			if(!((ExploreCoopAgent) this.myAgent).lstench().isEmpty()) {
+				
+			}
 			/**
 			 * Just added here to let you see what the agent is doing, otherwise he will be too quick
 			 */
@@ -114,21 +104,27 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			//1) remove the current node from openlist and add it to closedNodes.
+			//1) remove the current node from openlist and add it to closedNodes
 			this.myMap.addNode(myPosition, MapAttribute.closed);
 			Node nn= this.myMap.getG().getNode(myPosition);
 			for(String s : this.myInfo.keySet()) {
 				Couple<Integer,SerializableSimpleGraph<String, MapAttribute>> c;
+	
 				SerializableSimpleGraph<String,MapAttribute> updateSG;
-				updateSG=this.myInfo.get(s).getRight();
+				if(this.myInfo.get(s).getLeft()==1) {
+					
+					updateSG = new SerializableSimpleGraph<String,MapAttribute>();
+				}else {
+					updateSG=this.myInfo.get(s).getRight();
+				}
 				updateSG.addNode(nn.getId(),MapAttribute.valueOf((String)nn.getAttribute("ui.class")));
 				c=new Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>(this.myInfo.get(s).getLeft(), updateSG);
 				this.myInfo.put(s, c);
 				//chgt indice couple
-				Couple<Integer,SerializableSimpleGraph<String, MapAttribute>> newc;
+				//Couple<Integer,SerializableSimpleGraph<String, MapAttribute>> newc;
 				// 1 car la carte a partage est vide puisque l'information bien d etre partage
-				newc=((ExploreCoopAgent) this.myAgent).setCouple(s,this.myInfo.get(s).getRight(),2);
-				this.myInfo.put(s, newc );
+				//newc=((ExploreCoopAgent) this.myAgent).setCouple(s,this.myInfo.get(s).getRight(),this.myInfo.get(s).getLeft());
+				this.myInfo.put(s, c );
 			}
 		
 			//2) get the surrounding nodes and, if not in closedNodes, add them to open nodes.
@@ -156,7 +152,7 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 					if (myPosition!=nodeId) {
 						updateSG.addEdge(nn.getEdgeBetween(n).getId(),nn.getId(),n.getId());
 					}
-					c=new Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>(this.myInfo.get(s).getLeft(), updateSG);
+					c=new Couple<Integer,SerializableSimpleGraph<String, MapAttribute>>(2, updateSG);
 					this.myInfo.put(s, c);
 				}
 				
@@ -165,75 +161,33 @@ public class ExploCoopBehaviour extends SimpleBehaviour {
 			//3) while openNodes is not empty, continues.
 			if (!this.myMap.hasOpenNode()){
 				//Explo finished
-				
-				finished=true;
-				HashMap<String,List<String>> myStench=new HashMap<String,List<String>>();
-				List<String>pos_avant_next=new ArrayList<String>();
-				// State names
-				String c = "chasse"; 
-				String s = "send"; 
-				String it="istermine";
-				String t="termine";
-				String r="receivewhoishere";
-				String posavant="-1";
-				String nextNode1="-1";
-				pos_avant_next.add(0, posavant);
-				pos_avant_next.add(1,nextNode1);
-				//creer chasse solo fsm
-				FSMBehaviour fsm = new FSMBehaviour(this.myAgent); // Define the different states and behaviours 
-				fsm.registerFirstState (new MoveAloneBehaviour(myAgent, myMap,pos_avant_next), c); 
-				fsm.registerState (new SendBehaviour(myAgent, myStench), s); // Register the transitions
-				fsm.registerState(new IsTermineBehaviour(myAgent, myMap, agents_pos, myStench, pos_avant_next),it);
-				fsm.registerState(new ReceiveWhoIsHereBehaviour(myAgent, myMap, myInfo),r);
-				fsm.registerLastState(new TermineBehaviour(), t);
-				fsm.registerDefaultTransition (c,s);//Default 
-				fsm.registerDefaultTransition (s,r);
-				//1:continue;
-				//2:fini chasse solo fsm(fini block ou passer chasse together)
-				fsm. registerTransition (r,it, 1);
-				fsm. registerTransition (r,t, 2);
-				fsm. registerTransition (it,c, 1);
-				fsm. registerTransition (it,t, 2);
-				this.myAgent.addBehaviour(fsm);
-				System.out.println(this.myAgent.getLocalName()+"\t"+myPosition+" \n\n\n- Exploration successufully done, behaviour removed.\n\n\n");
 			}else{
-				
 				//4) select next move.
 				//4.1 If there exist one open node directly reachable, go for it,
 				//	 otherwise choose one from the openNode list, compute the shortestPath and go for it
 				if (nextNode==null){
-					nextNode=this.myMap.getNextNode(myPosition,this.agents_pos,this.myAgentToShareMap,lobs);
+					nextNode=this.myMap.getNextNode(myPosition,this.agents_pos);
+					
 				}else {
+					if(this.agents_pos.containsValue(nextNode)) {
+						List<String> nodeAdj=this.myMap.getnodeAdjacent(myPosition);
+						Integer r=(int)( Math.random() *  nodeAdj.size()  );
+						nextNode=nodeAdj.get(r);
+					}
 					//System.out.println("nextNode notNUll - "+this.myAgent.getLocalName()+"-- list= "+this.myMap.getOpenNodes()+"\n -- nextNode: "+nextNode);
 				}
-				this.myAgentToAsk=((ExploreCoopAgent) this.myAgent).setAgentToAsk();
-				ACLMessage msg=new ACLMessage(ACLMessage.REQUEST);
-				msg.setSender(this.myAgent.getAID());
-				msg.setProtocol("WHO_IS_HERE_PROTOCOL");
-				msg.setContent(myPosition);
-				for (String agentName : this.myAgentToAsk) {
-					msg.addReceiver(new AID(agentName,AID.ISLOCALNAME));
-				}
-				((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
-				
-				posavant=myPosition;
-				nextnodeblock=nextNode;
+				String avant=myPosition;
+				String nextNodeblock=nextNode;
+				this.pos_avant_next.add(0, avant);
+				this.pos_avant_next.add(1, nextNodeblock);
+				(( ExploreCoopAgent) this.myAgent).setmyTemps();
 				((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
 			}
+
 		}
+		//System.out.println("EXPLO COOP BEHAVIOUR\n\n\n======================");
 	}
 
-
-
-	@Override
-	public boolean done() {
-		if(finished) {
-			((ExploreCoopAgent) this.myAgent).setEnd();
-		}
-		return finished;
-	}
-	
-	
 	
 	
 }
