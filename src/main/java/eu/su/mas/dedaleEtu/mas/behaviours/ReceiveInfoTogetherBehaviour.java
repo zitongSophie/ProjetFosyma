@@ -94,7 +94,7 @@ public class ReceiveInfoTogetherBehaviour extends OneShotBehaviour{
 			HashMap<String,String> nextAllpos=this.getPositionForEachAgent(infoOdeurAgent, agentpos);
 			SMAllPosition mycontent=new SMAllPosition(new java.util.Date(),nextAllpos);
 			ACLMessage msg2=new ACLMessage(ACLMessage.INFORM);
-			msg2.setProtocol("POS-MOVE'TOGETHER");
+			msg2.setProtocol("POS-MOVE-TOGETHER");
 			msg2.setSender(this.myAgent.getAID());
 			try {
 				msg2.setContentObject(mycontent);

@@ -70,7 +70,7 @@ public class MoveTogetherBehaviour extends OneShotBehaviour {
 		
 		final MessageTemplate msgT = MessageTemplate.and(
 				MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-				MessageTemplate.MatchProtocol("POS-MOVE'TOGETHER"));
+				MessageTemplate.MatchProtocol("POS-MOVE-TOGETHER"));
 		ACLMessage msg = this.myAgent.receive(msgT);
 		
 		try {

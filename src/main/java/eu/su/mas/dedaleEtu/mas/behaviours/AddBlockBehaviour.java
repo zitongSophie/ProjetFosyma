@@ -25,34 +25,15 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 
-/**
- * The agent periodically share its map.
- * It blindly tries to send all its graph to its friend(s)  	
- * If it was written properly, this sharing action would NOT be in a ticker behaviour and only a subgraph would be shared.
-
- * @author hc
- *
- */
 public class AddBlockBehaviour extends OneShotBehaviour{
 	
 	private MapRepresentation myMap;
-	private List<String> Cg;
+	private List<String> CgChasse;
 	private int exitvalue=1;//0:j'ai pas fini: entre dans ce state seulement quand moi meme est fini,mais pas fini pour tout le monde;tous le monde est fini:2
 
-	/**
-	 * The agent periodically share its map.
-	 * It blindly tries to send all its graph to its friend(s)  	
-	 * If it was written properly, this sharing action would NOT be in a ticker behaviour and only a subgraph would be shared.
-
-	 * @param a the agent
-	 * @param period the periodicity of the behaviour (in ms)
-	 * @param mymap (the map to share)
-	 * @param receivers the list of agents to send the map to
-	 */
-	public AddBlockBehaviour(Agent a,MapRepresentation mymap) {
+	public AddBlockBehaviour(Agent a,List<String> CgChasse) {
 		super(a);
-		this.myMap=mymap;
-		this.Cg=new ArrayList<String>();
+		this.CgChasse=CgChasse;
 	}
 
 	/**
@@ -63,20 +44,13 @@ public class AddBlockBehaviour extends OneShotBehaviour{
 		//4) At each time step, the agent blindly send all its graph to its surrounding to illustrate how to share its knowledge (the topology currently) with the the others agents. 	
 		// If it was written properly, this sharing action should be in a dedicated behaviour set, the receivers be automatically computed, and only a subgraph would be shared.
 		//System.out.println("entree ADD END "+this.myAgent.getLocalName());
-		
-		try {
-			this.myAgent.doWait(150);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		if(this.myMap==null) block();
-		
+
 		
 		final MessageTemplate msgT = MessageTemplate.and(
 				MessageTemplate.MatchPerformative(ACLMessage.INFORM),
 				MessageTemplate.MatchProtocol("ADD_ME_AS_BLOCK"));
 		ACLMessage msg = this.myAgent.receive(msgT);
-		while(msg!=null) {
+		if(msg!=null) {
 			SMEnd sgreceived=null;
 			try {
 				sgreceived =  ((SMEnd) msg.getContentObject());
@@ -90,15 +64,15 @@ public class AddBlockBehaviour extends OneShotBehaviour{
 			}
 			if(((ExploreCoopAgent) this.myAgent).isIdenticalList(((ExploreCoopAgent) this.myAgent).getAgentsListDF("coureur"),sgreceived.getListFini())) {// this.myAgent sait que le sender sait que tout le monde a fini
 				System.out.println(this.myAgent.getLocalName()+" find "+msg.getSender().getLocalName()+" knew everything "+sgreceived.getListFini());
-				if(!this.Cg.contains(msg.getSender().getLocalName())){// ajoute l agent dans ceux qui savent que tout le monde a fini
-					this.Cg.add(msg.getSender().getLocalName());
+				if(!this.CgChasse.contains(msg.getSender().getLocalName())){// ajoute l agent dans ceux qui savent que tout le monde a fini
+					this.CgChasse.add(msg.getSender().getLocalName());
 				}
-				if(!Cg.contains(this.myAgent.getLocalName())) {
-					this.Cg.add(this.myAgent.getLocalName());
+				if(!CgChasse.contains(this.myAgent.getLocalName())) {
+					this.CgChasse.add(this.myAgent.getLocalName());
 					((ExploreCoopAgent) this.myAgent).setfiniblock(sgreceived.getListFini());
 					System.out.println(this.myAgent.getLocalName()+" knew block now "+((ExploreCoopAgent) this.myAgent).getFiniExpl().toString());
 				}
-				if(((ExploreCoopAgent) this.myAgent).isIdenticalList(((ExploreCoopAgent) this.myAgent).getAgentsListDF("coureur"),this.Cg)) {// tout le monde sait que tout le monde a fini
+				if(((ExploreCoopAgent) this.myAgent).isIdenticalList(((ExploreCoopAgent) this.myAgent).getAgentsListDF("coureur"),this.CgChasse)) {// tout le monde sait que tout le monde a fini
 					System.out.println("------------------------------------\n"+this.myAgent.getLocalName()+" knew block now "+((ExploreCoopAgent) this.myAgent).getFiniExpl().toString());
 					exitvalue=2;
 				}

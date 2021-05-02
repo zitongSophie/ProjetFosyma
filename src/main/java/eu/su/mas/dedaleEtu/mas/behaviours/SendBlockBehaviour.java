@@ -14,11 +14,12 @@ import eu.su.mas.dedaleEtu.mas.knowledge.SMEnd;
 import eu.su.mas.dedaleEtu.mas.knowledge.SMPosition;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
-public class SendBlockBehaviour extends SimpleBehaviour{
+public class SendBlockBehaviour extends OneShotBehaviour{
 	private static final long serialVersionUID = 8802075205635695208L;
 	private boolean finished= false;
 	private List<String> agentsToContact;
@@ -58,15 +59,5 @@ public class SendBlockBehaviour extends SimpleBehaviour{
 		}
 		//3) send the message
 		((AbstractDedaleAgent)  this.myAgent).sendMessage(msg2);
-		if(((ExploreCoopAgent) this.myAgent).getendblock()) {
-			finished=true;
-		}
-	}
-	@Override
-	public boolean done() {
-		if(finished) {
-			System.out.println(this.myAgent.getLocalName()+" remove SendEndBehaviour");
-		}
-		return finished;
 	}
 }

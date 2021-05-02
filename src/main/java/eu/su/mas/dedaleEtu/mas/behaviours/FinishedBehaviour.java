@@ -18,8 +18,9 @@ public class FinishedBehaviour extends OneShotBehaviour {
 	@Override
 	public void action() {
 		// TODO Auto-generated method stub
-		System.out.println(this.myAgent.getLocalName()+"~~~~~ "+": "+this.nameFSM+" finished~~~~~~~~~~~");
+		System.out.println(this.myAgent.getLocalName()+"~~~~~ "+": "+this.nameFSM+" finished~~~~~~~~~~~"+((ExploreCoopAgent) this.myAgent).get_fsm_exitvalue());
 	}
+	@Override
 	
 	public int onEnd() {return ((ExploreCoopAgent) this.myAgent).get_fsm_exitvalue();}
 }

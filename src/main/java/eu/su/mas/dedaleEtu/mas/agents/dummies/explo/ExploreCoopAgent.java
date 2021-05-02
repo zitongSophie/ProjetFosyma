@@ -8,16 +8,25 @@ import java.util.Set;
 import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.behaviours.startMyBehaviours;
+import eu.su.mas.dedaleEtu.mas.behaviours.AddBlockBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.AddEndBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.CheckBlockBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExploCoopBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.FinishedBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.IsAllFinishedBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.IsFinishedExploBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.IsFinishedHuntAloneBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.IsFinishedHuntTogetherBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.MoveAloneBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.MoveTogetherBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ReceiveDecisionBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.ReceiveInfoTogetherBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ReceiveMapBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ReceivePosAndOdeursBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.ReceivePosWumpusBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.SendBlockBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.SendDecisionBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.SendEndBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.SendPosAndOdeursBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.behaviours.ShareMapBehaviour;
@@ -141,79 +150,133 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		List<Behaviour> lb=new ArrayList<Behaviour>();
 		
 		List<String>pos_avant_next=new ArrayList<String>();
+		HashMap<String,String>check=new HashMap<String,String>();
 		pos_avant_next.add("-1");
 		pos_avant_next.add("-1");
 		//main fsm behaviour
 		String E=" ExploCoop ";
 		String HA=" HuntAlone ";
 		String HT=" HuntTogether ";
-		String F="Finished";//exit with exitvalue given
+		String CB="CheckBlock";
+		String SB="SendBlock";
+		String AB="AddBlock";
+		String FA="FinishedALL";//exit with exitvalue given
+		String FE="Finishedexpl";
+		String FHA="FinishedAlone";
+		String FHT="Finishedtogether";
 		FSMBehaviour fsm_main = new FSMBehaviour(this);
 		fsm_main=new FSMBehaviour(this);
 		FSMBehaviour fsm_exploration = new FSMBehaviour(this); 
 		FSMBehaviour fsm_hunt_alone = new FSMBehaviour(this);
-		fsm_main.registerFirstState(fsm_exploration, E);
-		fsm_main.registerState(fsm_hunt_alone, HA);
-		fsm_main.registerState(new FinishedBehaviour(this," ALL "), F);
-		String s="share";
-		fsm_main.registerLastState(new ShareMapBehaviour(this, myMap, agents_pos, otherInfo),s);
-		fsm_main.registerDefaultTransition(F, s);
-		fsm_main.registerTransition(E, HA, 0);
-		//fsm_main.registerTransition(E, HT, 1);
-		fsm_main.registerTransition(E, F, 2);
-		//fsm_main.registerTransition(HA, HT,1);
-		fsm_main.registerTransition(HA, F, 2);
-		//fsm_main.registerTransition(HT, F, 2);
+
 		//exploration fsm behaviour 	
 		String ME="MoveExploCoop";
-		String SPOE="SendPosAndOdeurs";//my current position, <date, the most recent information about stench that i have >, sending time
+		String SPO="SendPosAndOdeurs";//my current position, <date, the most recent information about stench that i have >, sending time
 		String RPOE="ReceivePosAndOdeurs";//sending date should be after myTemps update information
 		String SM="ShareMap";
 		String RM="ReceiveMap";//sending date should be after myTemps,if message receive type match ReceiveInformation :go to RIE
+		String AE="AddEnd";
 		String IFE="IfFinishedExplo";//if finished give the exitvalue to finish
+		String RPW="ReceivePosWumpus";
 		// Define the different states and behaviours 
 		fsm_exploration.registerFirstState (new ExploCoopBehaviour(this, myMap, otherInfo,agents_pos, pos_avant_next), ME); // Register the transitions
-		fsm_exploration.registerState(new SendPosAndOdeursBehaviour(this, list_recent_odeurs),SPOE);
+		fsm_exploration.registerState(new SendPosAndOdeursBehaviour(this, list_recent_odeurs),SPO);
 		fsm_exploration.registerState (new ReceivePosAndOdeursBehaviour(this, agents_pos, this.list_recent_odeurs), RPOE); 
 		fsm_exploration.registerState(new ShareMapBehaviour(this, myMap, agents_pos, otherInfo),SM);
 		fsm_exploration.registerState(new ReceiveMapBehaviour(this, myMap, agents_pos),RM);
+		fsm_exploration.registerState(new ReceivePosWumpusBehaviour(this),RPW);
 		fsm_exploration.registerState(new IsFinishedExploBehaviour(this, myMap, agents_pos, pos_avant_next, pos_avant_next),IFE);
-		fsm_exploration.registerLastState(new FinishedBehaviour(this,E), F);
-		fsm_exploration.registerDefaultTransition (ME,SPOE);//Default 
-		fsm_exploration.registerDefaultTransition (SPOE,RPOE);
+		fsm_exploration.registerState(new AddEndBehaviour(this, Cg),AE);
+		fsm_exploration.registerLastState(new FinishedBehaviour(this,E), FE);
+		fsm_exploration.registerDefaultTransition (ME,SPO);//Default 
+		fsm_exploration.registerDefaultTransition (SPO,RPOE);
 		fsm_exploration.registerDefaultTransition (RPOE,SM);
 		fsm_exploration.registerDefaultTransition (SM,RM);
+		fsm_exploration.registerDefaultTransition (RM,RPW);
+		fsm_exploration.registerTransition (RPW,IFE,1);
+		fsm_exploration.registerTransition (RPW,FE,2);
 		fsm_exploration.registerDefaultTransition (RM,IFE);
+		fsm_exploration.registerDefaultTransition (AE,FE);
 		fsm_exploration. registerTransition (IFE,ME, 1);
-		fsm_exploration. registerTransition (IFE,F, 2);
+		fsm_exploration. registerTransition (IFE,AE, 2);
+		
 		
 		//chasse alone fsm behaviour
 		String MA="MoveAlone";
-		String SPOHA="SendGoTogether";
 		String IFHA="IsFinishedHuntAlone";
+		String SE="SendEnd";
+		
 		// Define the different states and behaviours 
         fsm_hunt_alone.registerFirstState(new MoveAloneBehaviour(this, myMap,pos_avant_next),MA); 
-        fsm_hunt_alone.registerState (new SendPosAndOdeursBehaviour(this,list_recent_odeurs), SPOHA); // Register the transitions
-        fsm_hunt_alone.registerState(new IsFinishedHuntAloneBehaviour(this, myMap, agents_pos, pos_avant_next,finiExpl),IFHA);
-        fsm_hunt_alone.registerState(new ShareMapBehaviour(this, myMap, agents_pos, otherInfo),SM);
-        fsm_hunt_alone.registerLastState(new FinishedBehaviour(this,HA), F);
-        fsm_hunt_alone.registerDefaultTransition (MA,SPOHA);//Default 
-        fsm_hunt_alone.registerDefaultTransition (SPOHA,IFHA);
-        fsm_hunt_alone.registerDefaultTransition(SM, F);
+        fsm_hunt_alone.registerState(new IsFinishedHuntAloneBehaviour(this, myMap, agents_pos, pos_avant_next),IFHA);
+        fsm_hunt_alone.registerState(new SendEndBehaviour(this, Cg),SE);
+        fsm_hunt_alone.registerState(new AddEndBehaviour(this, Cg),AE);
+        fsm_hunt_alone.registerState(new AddBlockBehaviour(this, CgChasse),AE);
+        fsm_hunt_alone.registerLastState(new FinishedBehaviour(this,HA), FHA);
+        fsm_hunt_alone.registerDefaultTransition(MA, SE);
+        fsm_hunt_alone.registerDefaultTransition(SE, AE);
+        fsm_hunt_alone.registerDefaultTransition(AE, IFHA);
+        fsm_hunt_alone.registerTransition (IFHA,MA, 1);//move alone
+        fsm_hunt_alone.registerTransition (IFHA,AB, 2);//finished
+        fsm_hunt_alone.registerDefaultTransition(AB, FHA);
+        
+
+        String MT="MoveTogether";
+        String IFHT="IsFinishedHuntTogether";
+        String RIT="ReceiveInformationTogeter";
+        FSMBehaviour fsm = new FSMBehaviour(this); // Define the different states and behaviours 
+        fsm.registerFirstState (new SendPosAndOdeursBehaviour(this, this.list_recent_odeurs), SPO);
+        fsm.registerState (new SendEndBehaviour(this, pos_avant_next), MT);
+        fsm.registerState(new AddEndBehaviour(this, pos_avant_next), ME);
+        fsm.registerState (new ShareMapBehaviour(this, myMap, agents_pos, otherInfo), SM);
+        fsm.registerState (new MoveTogetherBehaviour(this, myMap), MT); // Register the transitions
+        fsm.registerState(new IsFinishedHuntTogetherBehaviour(this, myMap, agents_pos, pos_avant_next,finiExpl),IFHT);
+        fsm.registerState(new ReceiveInfoTogetherBehaviour(this, myMap, agents_pos,this.list_recent_odeurs),RIT);
+        fsm.registerLastState(new FinishedBehaviour(this, HT), FHT);
+        fsm.registerDefaultTransition (SM,SE);//Default 
+        fsm.registerDefaultTransition (SE,AE);
+        fsm.registerDefaultTransition (AE,RIT);
+        fsm.registerDefaultTransition (RIT,MT);
         //1:continue;
         //2:fini chasse solo fsm(fini block ou passer chasse together)
-        fsm_hunt_alone.registerTransition (IFHA,MA, 1);//move alone
-        fsm_hunt_alone.registerTransition (IFHA,F, 2);//finished
-        fsm_hunt_alone.registerTransition (IFHA,SM, 0);//share map
-        //fsm. registerTransition (it,t, 2);
-        //this.myAgent.addBehaviour(fsm);
+        fsm. registerTransition (SPO,SE, 4);
+        fsm. registerTransition (SPO,SM, 3);
+        fsm. registerTransition (IFHT,SPO, 1);
+        fsm. registerTransition (IFHT,FHA, 2);
+
+        
+		fsm_main.registerFirstState(fsm_exploration, E);
+		fsm_main.registerState(fsm_hunt_alone, HA);
+		fsm_main.registerState(new CheckBlockBehaviour(this, myMap, pos_avant_next,check), CB);
+		fsm_main.registerState(new AddBlockBehaviour(this, CgChasse), AB);
+		fsm_main.registerState(new SendBlockBehaviour(this, CgChasse), SB);
+		fsm_main.registerLastState(new FinishedBehaviour(this," ALL "), FA);
+		//String s="share";
+		//fsm_main.registerLastState(new ShareMapBehaviour(this, myMap, agents_pos, otherInfo),s);
+		//fsm_main.registerDefaultTransition(CB, AB);
 		
+		//0:->huntalone,1:->hunttogether,2:->checkblock(not sure to block),3:->addblock(sure to block)
+		fsm_main.registerTransition(E, HA, 0);
+		fsm_main.registerTransition(E, HT, 1);
+		fsm_main.registerTransition(E, CB, 2);
+		fsm_main.registerTransition(E, AB, 3);
+		
+		fsm_main.registerTransition(HA, HT, 1);
+
+		fsm_main.registerTransition(HA, AB, 3);
+	
+		fsm_main.registerTransition(CB, AB,2);
+		fsm_main.registerTransition(CB, E,1);
+		
+		
+		fsm_main.registerDefaultTransition(HT, AB);
+	
 		/************************************************
 		 * 
 		 * ADD the behaviours of the Dummy Moving Agent
 		 * 
 		 ************************************************/
-		lb.add(fsm_main);
+		lb.add(fsm_exploration);
 		
 		
 		

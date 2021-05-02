@@ -44,22 +44,12 @@ public class AddEndBehaviour extends OneShotBehaviour{
 
 	private static final long serialVersionUID = -568863390879327961L;
 	public void action() {
-
-		try {
-			this.myAgent.doWait(150);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
 		
 		final MessageTemplate msgT = MessageTemplate.and(
 				MessageTemplate.MatchPerformative(ACLMessage.INFORM),
 				MessageTemplate.MatchProtocol("ADD_ME_AS_FINISHED"));
 		ACLMessage msg = this.myAgent.receive(msgT);
-		if(msg==null) {
-			block();
-		}
-		while(msg!=null) {
+		if(msg!=null) {
 			SMEnd sgreceived=null;
 			try {
 				sgreceived =  ((SMEnd) msg.getContentObject());
@@ -90,16 +80,7 @@ public class AddEndBehaviour extends OneShotBehaviour{
 			msg = this.myAgent.receive(msgT);
 		}
 	}
-	/*
-	@Override
-	public boolean done() {
-		if(finished) {
-			((ExploreCoopAgent) this.myAgent).setEnd();
-			System.out.println(this.myAgent.getLocalName()+" remove AddEndBehaviour");
-		}
-		return finished;
-	}
-	*/
+
 
 
 }

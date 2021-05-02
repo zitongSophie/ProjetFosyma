@@ -31,6 +31,8 @@ public class MoveAloneBehaviour extends OneShotBehaviour {
 	 */
 	private MapRepresentation myMap;
 	private List<String> pos_avant_next;
+	private int exitvalue=1;
+
 	/**
 	 * 
 	 * @param myagent
@@ -46,7 +48,6 @@ public class MoveAloneBehaviour extends OneShotBehaviour {
 
 	@Override
 	public void action() {
-		
 		//0) Retrieve the current position
 		String myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 		String posavant=this.pos_avant_next.get(0);

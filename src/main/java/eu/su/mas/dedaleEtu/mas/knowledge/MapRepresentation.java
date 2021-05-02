@@ -482,6 +482,47 @@ public class MapRepresentation implements Serializable {
 		return g;
 	}
 	
+    public HashMap<String,String> getAllNextNode(Set<String> agentsansposition,String posBut,HashMap<String,String> agents_pos) {
+
+        HashMap<String,String> allpostomove=new HashMap<String,String>();
+        List<String> noeudAdjBut=getnodeAdjacent(posBut); //noeud adj de posBut
+        for(String name:agentsansposition) {
+            if(noeudAdjBut.contains(agents_pos.get(name))) {
+                allpostomove.put(name, agents_pos.get(name)); //pas besoin de bouger
+                noeudAdjBut.remove(agents_pos.get(name));
+            }
+        }
+        for (String nodeAdj:noeudAdjBut) {
+            Integer min= null;
+            HashMap<String,String> lpath=new HashMap<String,String>();
+            for (String name  : agentsansposition) {
+                List<String> mypath=this.getShortestPath(agents_pos.get(name),nodeAdj); //chemin pour l'agent
+                
+                if(min==null) {
+                    lpath=new HashMap<String,String>();
+                    min=mypath.size();;
+                    lpath.put(name, mypath.get(0));
+
+                }
+                if(min.equals(mypath.size())) {
+                    lpath.put(name, mypath.get(0));
+                }
+                    
+                if(min>mypath.size()) {
+                    lpath=new HashMap<String,String>();
+                    min=mypath.size();
+                    lpath.put(name, mypath.get(0));
+                }
+            }
+            for (String s: lpath.keySet()) {
+                allpostomove.put(s, lpath.get(s));
+                agentsansposition.remove(s);
+            }
+                
+        }
+        return allpostomove;
+    
+    }  
 	
 	
 

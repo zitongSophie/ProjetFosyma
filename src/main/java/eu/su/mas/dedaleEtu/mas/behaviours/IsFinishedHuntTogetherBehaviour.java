@@ -25,7 +25,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 
-public class IsFinishedHuntAloneBehaviour extends OneShotBehaviour {
+public class IsFinishedHuntTogetherBehaviour extends OneShotBehaviour {
 
 	/**
 	 * 
@@ -37,6 +37,7 @@ public class IsFinishedHuntAloneBehaviour extends OneShotBehaviour {
 	private HashMap<String,String>agents_pos;
 	private int exitvalue=1;					//1:continue;
 												//2:fini chasse solo fsm(fini block ou passer chasse together fsm)
+	private List<String>finiexpl;
 	private List<String>pos_avant_next;
 	/**
 	 * 
@@ -44,12 +45,13 @@ public class IsFinishedHuntAloneBehaviour extends OneShotBehaviour {
 	 * @param myMap known map of the world the agent is living in
 	 * @param agentNames name of the agents to share the map with
 	 */																												//add attribute
-	public IsFinishedHuntAloneBehaviour(final Agent myagent, MapRepresentation myMap,HashMap<String,String> pos,List<String>pos_avant_next) {
+	public IsFinishedHuntTogetherBehaviour(final Agent myagent, MapRepresentation myMap,HashMap<String,String> pos,List<String>pos_avant_next,List<String>finiexpl) {
 		super(myagent);
 		this.myMap=myMap;
 		this.myAgent=myagent;
 		this.agents_pos=pos;
 		this.pos_avant_next=pos_avant_next;
+		this.finiexpl=finiexpl;
 		
 	}
 
@@ -58,32 +60,22 @@ public class IsFinishedHuntAloneBehaviour extends OneShotBehaviour {
 		if(this.myMap==null) {
 			this.myMap=((ExploreCoopAgent) this.myAgent).getMap();
 		}
-
-		//System.out.println("HuntAloneBehaviour termine car communication");			
+		
 		String posavant=this.pos_avant_next.get(0);
 		String nextNode=this.pos_avant_next.get(1);
 		String myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
-		if(posavant.equals(myPosition)&& !this.agents_pos.containsValue(nextNode)&&((ExploreCoopAgent) this.myAgent).lstench().contains(nextNode)) {
-			Boolean isblock=true;
+		if(posavant.equals(myPosition)&& !this.agents_pos.containsValue(nextNode)) {
 			List<String>nodeAdj=this.myMap.getnodeAdjacent(nextNode);
-			for (String node:nodeAdj) {
-				if(!node.equals(myPosition)) {
-					isblock=false;
-					break;
-				}
-			}
-			if(isblock==true) {
+			nodeAdj.remove(((AbstractDedaleAgent)this.myAgent).getCurrentPosition());
+			if(this.agents_pos.values().containsAll(nodeAdj)) {
 				exitvalue=2;
-				((ExploreCoopAgent) this.myAgent).set_fsm_exitvalue(3);
-				System.out.println("HuntAloneBehaviour finished because block wumpus");
-				
 			}
 		}
 
 		
 		
 	}
-	public int onEnd() {return exitvalue;}
+	public int onEnd() {return exitvalue ;}
 
 
 }
