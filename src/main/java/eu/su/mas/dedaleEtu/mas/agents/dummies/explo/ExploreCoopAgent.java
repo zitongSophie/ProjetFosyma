@@ -159,10 +159,13 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		String HT=" HuntTogether ";
 		String SB="SendBlock";
 		String AB="AddBlock";
+		String AE="AddEnd";
+		String SE="SendEnd";
 		String FA="FinishedALL";//exit with exitvalue given
 		String FE="Finishedexpl";
 		String FHA="FinishedAlone";
 		String FHT="Finishedtogether";
+		String IAF="IsAllFinished";
 		FSMBehaviour fsm_main = new FSMBehaviour(this);
 		fsm_main=new FSMBehaviour(this);
 		FSMBehaviour fsm_exploration = new FSMBehaviour(this); 
@@ -172,6 +175,7 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		fsm_main.registerState(fsm_hunt_alone, HA);
 		fsm_main.registerState(new AddBlockBehaviour(this, CgChasse), AB);
 		fsm_main.registerState(new SendBlockBehaviour(this, CgChasse), SB);
+		fsm_main.registerState(new IsAllFinishedBehaviour(this, this.CgChasse), IAF);
 		fsm_main.registerLastState(new FinishedBehaviour(this," ALL "), FA);
 		//String s="share";
 		//fsm_main.registerLastState(new ShareMapBehaviour(this, myMap, agents_pos, otherInfo),s);
@@ -181,18 +185,23 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		fsm_main.registerTransition(E, HA, 0);
 		fsm_main.registerTransition(E, HT, 1);
 		fsm_main.registerTransition(E, AB, 3);
+		
 		fsm_main.registerTransition(HA, HT, 1);
 		fsm_main.registerTransition(HA, AB, 3);
+		
 		fsm_main.registerDefaultTransition(HT, AB);
 		fsm_main.registerDefaultTransition(AB, SB);
-		fsm_main.registerDefaultTransition(SB, FA);
+		fsm_main.registerDefaultTransition(SB, IAF);
+		fsm_main.registerTransition(IAF, AB,1);
+		fsm_main.registerTransition(IAF, FA,2);
+		
+		
 		//exploration fsm behaviour 	
 		String ME="MoveExploCoop";
 		String SPO="SendPosAndOdeurs";//my current position, <date, the most recent information about stench that i have >, sending time
 		String RPOE="ReceivePosAndOdeurs";//sending date should be after myTemps update information
 		String SM="ShareMap";
 		String RM="ReceiveMap";//sending date should be after myTemps,if message receive type match ReceiveInformation :go to RIE
-		String AE="AddEnd";
 		String IFE="IfFinishedExplo";//if finished give the exitvalue to finish
 		// Define the different states and behaviours 
 		fsm_exploration.registerFirstState (new ExploCoopBehaviour(this, myMap, otherInfo,agents_pos, pos_avant_next), ME); // Register the transitions
@@ -218,7 +227,6 @@ public class ExploreCoopAgent extends AbstractDedaleAgent {
 		//chasse alone fsm behaviour
 		String MA="MoveAlone";
 		String IFHA="IsFinishedHuntAlone";
-		String SE="SendEnd";
 		
 		// Define the different states and behaviours 
         fsm_hunt_alone.registerFirstState(new MoveAloneBehaviour(this, myMap,pos_avant_next),MA); 

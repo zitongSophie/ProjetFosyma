@@ -1,5 +1,6 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -28,12 +29,11 @@ public class IsAllFinishedBehaviour extends OneShotBehaviour {
 	 * @param myagent
 	 * @param myMap known map of the world the agent is living in
 	 * @param agentNames name of the agents to share the map with
-	 */																												//add attribute
-	public IsAllFinishedBehaviour(final Agent myagent, MapRepresentation myMap,HashMap<String,String>agents_pos,List<String>pos_avant_next,List<String>lstench) {
+	 */				
+	private List<String>CgChasse;
+	public IsAllFinishedBehaviour(final Agent myagent,List<String> cgChasse2) {
 		super(myagent);
-		this.myMap=myMap;
-		this.agents_pos=agents_pos;
-		this.pos_avant_next=pos_avant_next;
+		this.CgChasse=cgChasse2;
 	}
 
 	@Override
@@ -41,44 +41,10 @@ public class IsAllFinishedBehaviour extends OneShotBehaviour {
 		if(myMap==null) {
 			this.myMap=((ExploreCoopAgent) this.myAgent).getMap();
 		}
-		String posavant=this.pos_avant_next.get(0);
-		String nextNode=this.pos_avant_next.get(1);
-		String myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
-		if(posavant.equals(myPosition)&& !this.agents_pos.containsValue(nextNode)) {
-			Boolean isblock=true;
-			List<String>nodeAdj=this.myMap.getnodeAdjacent(nextNode);
-			if(this.myMap.getOpenNodes().contains(nextNode)) {
-				isblock=false;
-			}
-			for (String node:nodeAdj) {
-				if(this.myMap.getOpenNodes().contains(node)) {
-					isblock=false;
-				}
-				if(!node.equals(myPosition) && !this.agents_pos.containsValue(node)) {
-					isblock=false;
-				}
-			}
-			
-			if(isblock==true) {
-				exitvalue=2;
-				((ExploreCoopAgent) this.myAgent).set_fsm_exitvalue(2);
-				System.out.println(this.myAgent.getLocalName()+"Exploration finished because block wumpus"+" pos_wumpus "+nextNode+"nodeadj"+nodeAdj+" agents_pos "+agents_pos);
-
-			}
-		}
-		if(!myMap.hasOpenNode()) {
-			if(!this.agents_pos.isEmpty()) {
-				((ExploreCoopAgent) this.myAgent).set_fsm_exitvalue(0);//a changer
-				
-			}
+		if(CgChasse.size()==((ExploreCoopAgent) this.myAgent).getAgentsListDF("coureur").size()) {
 			exitvalue=2;
-			System.out.println(this.myAgent.getLocalName()+"\t"+" \n\n\n- Exploration successufully done, behaviour removed.\n\n\n");
-			
-			
 		}
-		
-		
-		
+			
 		
 	}
 	public int onEnd() {return exitvalue ;}
