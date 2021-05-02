@@ -91,7 +91,7 @@ public class MoveAloneBehaviour extends OneShotBehaviour {
 			this.pos_avant_next.add(1, nextNode);
 			((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
 			((ExploreCoopAgent) this.myAgent).setmyTemps();
-			System.out. println ( "----mytime "+((ExploreCoopAgent) this.myAgent).getmyTemps()+" stench "+lstench+this.myAgent.getLocalName()+"current pos"+((AbstractDedaleAgent)this.myAgent).getCurrentPosition()+"next move"+nextNode+"MoveAloneBehaviour\n--------" ) ;
+			//System.out. println ( "----mytime "+((ExploreCoopAgent) this.myAgent).getmyTemps()+" stench "+lstench+this.myAgent.getLocalName()+"current pos"+((AbstractDedaleAgent)this.myAgent).getCurrentPosition()+"next move"+nextNode+"MoveAloneBehaviour\n--------" ) ;
 		}
 	}
 }

@@ -50,7 +50,7 @@ public class IsFinishedExploBehaviour extends OneShotBehaviour {
 				((ExploreCoopAgent) this.myAgent).set_fsm_exitvalue(1);
 				
 			}
-			exitvalue=3;//fini
+			exitvalue=2;//fini
 			System.out.println(this.myAgent.getLocalName()+"\t"+" \n\n\n- Exploration successufully done, behaviour removed.\n\n\n");
 			
 			
@@ -58,7 +58,7 @@ public class IsFinishedExploBehaviour extends OneShotBehaviour {
 		String posavant=this.pos_avant_next.get(0);
 		String nextNode=this.pos_avant_next.get(1);
 		String myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
-		if(posavant.equals(myPosition)&& !this.agents_pos.containsValue(nextNode)&& !((ExploreCoopAgent) this.myAgent).lstench().isEmpty()) {
+		if(posavant.equals(myPosition)&& !this.agents_pos.containsValue(nextNode)&& !((ExploreCoopAgent) this.myAgent).lstench().isEmpty()&& !this.myMap.getOpenNodes().contains(nextNode)) {
 			Boolean isblock=true;
 			List<String>nodeAdj=this.myMap.getnodeAdjacent(nextNode);
 			for (String node:nodeAdj) {
