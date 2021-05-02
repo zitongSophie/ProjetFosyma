@@ -55,11 +55,11 @@ public class ReceiveMapBehaviour extends OneShotBehaviour {
 			
 			if(!WishReceiveList.contains(msgReceived.getSender().getLocalName())) {
 				WishReceiveList.add(msgReceived.getSender().getLocalName());
-				System.out.println(this.myAgent.getLocalName()+"receive map from----> "+msgReceived.getSender().getLocalName()+" receivemap behaviour ");
+				//System.out.println(this.myAgent.getLocalName()+"receive map from----> "+msgReceived.getSender().getLocalName()+" receivemap behaviour ");
 				
 			}
 			
-			if(!this.agents_pos.isEmpty() && WishReceiveList.size()==this.agents_pos.size()) {
+			if(this.agents_pos.isEmpty() || WishReceiveList.size()==this.agents_pos.size()) {
 				break;
 			}
 			if(WishReceiveList.size()==((ExploreCoopAgent) this.myAgent).getAgentName().size()) {//already receive map to merge from the agent who maybe want to send

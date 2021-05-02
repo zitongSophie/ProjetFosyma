@@ -23,8 +23,7 @@ public class IsFinishedExploBehaviour extends OneShotBehaviour {
 	
 	private MapRepresentation myMap;
 	private HashMap<String,String>agents_pos;
-	private int exitvalue=1;					//1:continue;
-												//2:fini chasse solo fsm(fini block ou passer chasse together fsm)
+	private int exitvalue=1;//1:					
 	private List<String>lstench;
 	private List<String>pos_avant_next;
 	/**
@@ -32,7 +31,7 @@ public class IsFinishedExploBehaviour extends OneShotBehaviour {
 	 * @param myagent
 	 * @param myMap known map of the world the agent is living in
 	 * @param agentNames name of the agents to share the map with
-	 */																												//add attribute
+	 */																												
 	public IsFinishedExploBehaviour(final Agent myagent, MapRepresentation myMap,HashMap<String,String>agents_pos,List<String>pos_avant_next,List<String>lstench) {
 		super(myagent);
 		this.myMap=myMap;
@@ -51,7 +50,7 @@ public class IsFinishedExploBehaviour extends OneShotBehaviour {
 				((ExploreCoopAgent) this.myAgent).set_fsm_exitvalue(1);
 				
 			}
-			exitvalue=2;
+			exitvalue=3;//fini
 			System.out.println(this.myAgent.getLocalName()+"\t"+" \n\n\n- Exploration successufully done, behaviour removed.\n\n\n");
 			
 			
@@ -59,55 +58,38 @@ public class IsFinishedExploBehaviour extends OneShotBehaviour {
 		String posavant=this.pos_avant_next.get(0);
 		String nextNode=this.pos_avant_next.get(1);
 		String myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
-		if(myPosition!=null) {
-			List<String>opennode=this.myMap.getOpenNodes();
-			if(posavant.equals(myPosition)&& !this.agents_pos.containsValue(nextNode)) {
-				if(opennode.size()==1 && opennode.contains(nextNode)) {
-					exitvalue=2;
-					((ExploreCoopAgent) this.myAgent).set_fsm_exitvalue(2);//go to allfinished
-					System.out.println(this.myAgent.getLocalName()+"Exploration finished and  to  block wumpus : only single opennode"+" pos_wumpus "+nextNode+" agents_pos "+agents_pos);
-				}else {
-					//if it is a node we explored,see if all the nodes adjacent are occupied by agents
-					//other can be move ,not sure to block,need to check
-					if(opennode.size()>1 && !opennode.contains(nextNode)) {
-						List<String>nodeAdj=this.myMap.getnodeAdjacent(nextNode);
-						Boolean isblock=true;
-						for (String node:nodeAdj) {
-							if(!node.equals(myPosition) && !this.agents_pos.containsValue(node)) {
-								isblock=false;
-								break;
-							}
-						}
-						if(isblock=true) {
-							exitvalue=2;
-							((ExploreCoopAgent) this.myAgent).set_fsm_exitvalue(2);
-							ACLMessage msg2=new ACLMessage(ACLMessage.INFORM);
-							msg2.setSender(this.myAgent.getAID());
-							msg2.setProtocol("WUMPUS_IS_HERE");
-							((AbstractDedaleAgent)this.myAgent).sendMessage(msg2);	
-							msg2.setContent(nextNode);
-							for (String agentName : ((ExploreCoopAgent) this.myAgent).getAgentName()) {
-								msg2.addReceiver(new AID(agentName,AID.ISLOCALNAME));
-							}
-							System.out.println(this.myAgent.getLocalName()+"Exploration interrupt: may block a wumpus with other agents "+" pos_wumpus "+nextNode+" agents_pos "+agents_pos);
-						
-						}
-					}
+		if(posavant.equals(myPosition)&& !this.agents_pos.containsValue(nextNode)&& !((ExploreCoopAgent) this.myAgent).lstench().isEmpty()) {
+			Boolean isblock=true;
+			List<String>nodeAdj=this.myMap.getnodeAdjacent(nextNode);
+			for (String node:nodeAdj) {
+				if(!node.equals(myPosition) && !this.agents_pos.containsValue(node)) {
+					isblock=false;
+					break;
 				}
 			}
-		}
-		if(((ExploreCoopAgent) this.myAgent).lstench().isEmpty()) {
-			if(exitvalue==2) {
-				exitvalue=1;
+			
+			if(isblock==true) {
+				exitvalue=2;
+				((ExploreCoopAgent) this.myAgent).set_fsm_exitvalue(3);
+				System.out.println("EXPLORATIONBehaviour may block wumpus");
+				ACLMessage msg2=new ACLMessage(ACLMessage.INFORM);
+				msg2.setSender(this.myAgent.getAID());
+				msg2.setProtocol("WUMPUS_IS_HERE");
+				try {
+					msg2.setContentObject(nextNode);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				for (String agentName : ((ExploreCoopAgent) this.myAgent).getAgentName()) {
+					msg2.addReceiver(new AID(agentName,AID.ISLOCALNAME));
+				}
+				((AbstractDedaleAgent)this.myAgent).sendMessage(msg2);	
 			}
 		}
-
-
-		
-		
-		
-		
 	}
+		
 	public int onEnd() {return exitvalue;}
 
 

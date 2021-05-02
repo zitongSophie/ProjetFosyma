@@ -1,5 +1,6 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +26,6 @@ public class CheckBlockBehaviour extends OneShotBehaviour {
 	private static final long serialVersionUID = 7282088595445153555L;
 	private HashMap<String,String>check_pos;
 	private MapRepresentation myMap;
-	private boolean finished=false;
 	private List<String>pos_avant_next;
 	private int exitvalue=1;
 	public CheckBlockBehaviour(Agent myagent,MapRepresentation myMap,List<String>pos_avant_next,HashMap<String,String>check) {
@@ -39,43 +39,33 @@ public class CheckBlockBehaviour extends OneShotBehaviour {
 		if(myMap==null) {
 			this.myMap=((ExploreCoopAgent) this.myAgent).getMap();
 		}
-		String nextNode=this.pos_avant_next.get(1);
-		//I can move to this position or i l'owrong
-		if(((AbstractDedaleAgent)this.myAgent).moveTo(nextNode)||((ExploreCoopAgent) this.myAgent).lstench().isEmpty()) {
-			exitvalue=1;//hunt together
-			finished=true;
-		}else {
-			final MessageTemplate msgTemplate = MessageTemplate.and(
-					MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-					MessageTemplate.MatchProtocol("OK"));
-			ACLMessage msg = this.myAgent.receive(msgTemplate);
-			if(msg==null) {
-				exitvalue=1;
-				finished=true;
-			}else {
-				String s=msg.getContent();
-				
-				if(!check_pos.containsKey(msg.getSender().getLocalName())) {
-					check_pos.put(msg.getSender().getLocalName(), s);
-					ACLMessage msg2=new ACLMessage(ACLMessage.INFORM);
-					msg2.setSender(this.myAgent.getAID());
-					msg2.setProtocol("OK");
-					((AbstractDedaleAgent)this.myAgent).sendMessage(msg2);	
-					msg2.setContent(((AbstractDedaleAgent)this.myAgent).getCurrentPosition());
-					msg2.addReceiver(new AID(msg.getSender().getLocalName(),AID.ISLOCALNAME));
-				}
-				List<String>nodeAdj=this.myMap.getnodeAdjacent(nextNode);
-				nodeAdj.remove(((AbstractDedaleAgent)this.myAgent).getCurrentPosition());
-				if(this.check_pos.values().containsAll(nodeAdj)) {
-					exitvalue=2;
-					finished=true;
+		
+		
+	String posavant=this.pos_avant_next.get(0);
+	String nextNode=this.pos_avant_next.get(1);
+	String myPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
+	if(posavant.equals(myPosition)&& !this.check_pos.containsValue(nextNode)&& !((ExploreCoopAgent) this.myAgent).lstench().isEmpty()) {
+			Boolean isblock=true;
+			List<String>nodeAdj=this.myMap.getnodeAdjacent(nextNode);
+			for (String node:nodeAdj) {
+				if(!node.equals(myPosition) && !this.check_pos.containsValue(node)) {
+					exitvalue=1;
+					isblock=false;
+					break;
 				}
 			}
+			
+			if(isblock==true) {
+				exitvalue=2;	
+			}
+		
 		}
+		
 
 	}
 	@Override
 	public int onEnd() {
 		return exitvalue;
 	}
+
 }

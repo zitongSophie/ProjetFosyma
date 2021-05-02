@@ -102,6 +102,7 @@ public class MoveTogetherBehaviour extends OneShotBehaviour {
 		}
 		this.myPosition=Position;
 		this.myNexNode=msgContent.getListFini().get(this.myAgent.getLocalName());
+		((ExploreCoopAgent) this.myAgent).setmyTemps();
 		((AbstractDedaleAgent)this.myAgent).moveTo(this.myNexNode);
 		
 	}	

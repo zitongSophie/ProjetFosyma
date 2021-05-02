@@ -61,7 +61,7 @@ public class ReceivePosAndOdeursBehaviour extends OneShotBehaviour{
 			if(!time.containsKey(agentname)) {
 				time.put(agentname,smg.getDate());
 				this.agents_pos.put(agentname,smg.getpos());
-				System.out.println(this.myAgent.getLocalName()+" ReceivePosAndOdeurs 1: "+this.agents_pos);
+				//System.out.println(this.myAgent.getLocalName()+" ReceivePosAndOdeurs 1: "+this.agents_pos);
 				if(!(smg.getPredicPosGolem()==null)) {
 					if(this.list_recent_odeurs.getRight().isEmpty()) {
 						this.list_recent_odeurs=smg.getPredicPosGolem();
@@ -75,7 +75,7 @@ public class ReceivePosAndOdeursBehaviour extends OneShotBehaviour{
 				if(time.get(agentname).before(smg.getDate())) {
 					time.put(agentname, smg.getDate());
 					this.agents_pos.put(agentname,smg.getpos());
-					System.out.println(this.myAgent+" ReceivePosAndOdeurs 2: "+this.agents_pos);
+					//System.out.println(this.myAgent+" ReceivePosAndOdeurs 2: "+this.agents_pos);
 					if(!(smg.getPredicPosGolem()==null)) {
 						if(this.list_recent_odeurs==null) {
 							this.list_recent_odeurs=smg.getPredicPosGolem();

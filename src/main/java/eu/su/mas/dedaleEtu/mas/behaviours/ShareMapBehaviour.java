@@ -86,7 +86,7 @@ public class ShareMapBehaviour extends OneShotBehaviour{
 				newc=((ExploreCoopAgent) this.myAgent).setCouple(receiver,new SerializableSimpleGraph<String,MapAttribute>(),1);
 				this.agentsInfo.put(receiver, newc );
 				((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
-				System.out.println(this.myAgent.getLocalName()+" type 0 sharemap to ---> "+receiver+" agents_pos===="+this.agents_pos);
+				//System.out.println(this.myAgent.getLocalName()+" type 0 sharemap to ---> "+receiver+" agents_pos===="+this.agents_pos);
 			}
 			else{
 				if(this.agentsInfo.get(receiver).getLeft()==2) {
@@ -109,9 +109,9 @@ public class ShareMapBehaviour extends OneShotBehaviour{
 					newc=((ExploreCoopAgent) this.myAgent).setCouple(receiver,new SerializableSimpleGraph<String,MapAttribute>(),1);
 					this.agentsInfo.put(receiver, newc );
 					((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
-					System.out.println(this.myAgent.getLocalName()+" type 2 sharemap to ---> "+receiver);
+					//System.out.println(this.myAgent.getLocalName()+" type 2 sharemap to ---> "+receiver);
 				}else {
-					System.out.println(this.myAgent.getLocalName()+" receiver "+receiver+" NO=====sharemap  agentinfo "+this.agentsInfo.get(receiver).getLeft());
+					//System.out.println(this.myAgent.getLocalName()+" receiver "+receiver+" NO=====sharemap  agentinfo "+this.agentsInfo.get(receiver).getLeft());
 				}
 			}
 
